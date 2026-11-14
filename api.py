@@ -97,6 +97,40 @@ def get_overview() -> dict:
     }
 
 
+REGION_TR = {"marmara": "Marmara Denizi", "aegean": "Ege Denizi", "blacksea": "Karadeniz"}
+REGION_LOC = {"marmara": "Marmara Denizi'nde", "aegean": "Ege Denizi'nde", "blacksea": "Karadeniz'de"}
+MONTHS_TR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül",
+             "Ekim", "Kasım", "Aralık"]
+COMPONENT_TR = {"thermal": "sıcaklık", "calm": "durgunluk (zayıf rüzgâr)", "biomass": "klorofil / besin"}
+MONTHS = sorted(DF["date"].dropna().unique())
+MIN_YEAR, MAX_YEAR = int(DF["date"].dt.year.min()), int(DF["date"].dt.year.max())
+
+
+def tr_num(value: float, digits: int = 0, sign: bool = False) -> str:
+    text = f"{value:+.{digits}f}" if sign else f"{value:.{digits}f}"
+    return text.replace(".", ",")
+
+
+def basin_susceptibility() -> dict:
+    sus: dict[str, list[float]] = {}
+    for p in MAP_POINTS:
+        sus.setdefault(p["region"], []).append(p["susceptibility"])
+    return {r: float(np.mean(v)) for r, v in sus.items()}
+
+
+def basin_risk(values: dict, region: str, d_sst: float, d_wind: int, d_chl: int) -> float:
+    score, _ = risk_score(values["sst"] + d_sst, max(values["wind"] * (1 + d_wind / 100), 0.1),
+                          max(values["chl"] * (1 + d_chl / 100), 1e-3), basin_susceptibility()[region])
+    return score
+
+
+@app.get("/api/months")
+def get_months() -> dict:
+    labels = [pd.Timestamp(m).strftime("%Y-%m") for m in MONTHS]
+    default = "2021-05" if "2021-05" in labels else labels[-1]
+    return {"months": labels, "default": default, "min_year": MIN_YEAR, "max_year": MAX_YEAR}
+
+
 @app.get("/api/simulation")
 def get_simulation(
     year: int = 2021,
@@ -105,10 +139,17 @@ def get_simulation(
     d_sst: float = 0.0,
     d_wind: int = 0,
     d_chl: int = 0,
+    clim_start: int | None = None,
+    clim_end: int | None = None,
 ) -> dict:
     mode = "climatology" if climatology else "event"
+    clim_start = max(MIN_YEAR, clim_start or MIN_YEAR)
+    clim_end = min(MAX_YEAR, clim_end or MAX_YEAR)
+    if clim_end < clim_start:
+        clim_start, clim_end = clim_end, clim_start
     base = {
-        r: baseline_conditions(DF, r, mode, month=month, event_year=year)
+        r: baseline_conditions(DF, r, mode, month=month, event_year=year,
+                               start_year=clim_start, end_year=clim_end)
         for r in ("marmara", "aegean", "blacksea")
     }
     points_out = []
@@ -131,7 +172,131 @@ def get_simulation(
             "level": risk_level(score),
             "components": {k: round(v, 3) for k, v in comps.items()},
         })
-    return {"base": base, "points": points_out, "weights": RISK_WEIGHTS}
+    # ---- basin summary (map points averaged per basin) ------------------------------------
+    summary = {}
+    for region in ("marmara", "aegean", "blacksea"):
+        pts = [p for p in points_out if p["region"] == region]
+        score = float(np.mean([p["score"] for p in pts]))
+        base_score = float(np.mean([p["base_score"] for p in pts]))
+        shares = {k: float(np.mean([RISK_WEIGHTS[k] * p["components"][k] * p["susceptibility"] for p in pts]))
+                  for k in RISK_WEIGHTS}
+        total = sum(shares.values()) or 1.0
+        summary[region] = {
+            "name": REGION_TR[region], "score": round(score, 1), "base_score": round(base_score, 1),
+            "delta": round(score - base_score, 1), "level": risk_level(score),
+            "drivers": {k: round(100 * v / total, 1) for k, v in shares.items()},
+        }
+
+    # ---- risk curve ---------------------------------------------------------------------
+    # real data: the 12 months either side of the selected month
+    # long-term normal: the 12 calendar months of the selected year range
+    if climatology:
+        series: dict[str, list] = {"mode": "climatology", "dates": MONTHS_TR}
+        for region in ("marmara", "aegean", "blacksea"):
+            series[region] = [round(basin_risk(baseline_conditions(DF, region, "climatology", month=m,
+                                                                   start_year=clim_start, end_year=clim_end),
+                                               region, d_sst, d_wind, d_chl), 1) for m in range(1, 13)]
+    else:
+        selected = pd.Timestamp(year=year, month=month, day=1)
+        window = DF[(DF["date"] >= selected - pd.DateOffset(months=12)) &
+                    (DF["date"] <= selected + pd.DateOffset(months=12))].dropna(subset=["sst", "wind", "chl"])
+        series = {"mode": "event", "dates": sorted({d.strftime("%Y-%m") for d in window["date"]})}
+        for region in ("marmara", "aegean", "blacksea"):
+            sub = window[window["region"] == region].sort_values("date")
+            series[region] = [round(basin_risk(r, region, d_sst, d_wind, d_chl), 1) for _, r in sub.iterrows()]
+
+    insights = build_insights(year, month, climatology, clim_start, clim_end, summary, points_out,
+                              d_sst, d_wind, d_chl)
+    return {"base": base, "points": points_out, "weights": RISK_WEIGHTS, "summary": summary,
+            "series": series, "insights": insights, "climatology_range": [clim_start, clim_end]}
+
+
+def build_insights(year: int, month: int, climatology: bool, clim_start: int, clim_end: int,
+                   summary: dict, points: list, d_sst: float, d_wind: int, d_chl: int) -> list[dict]:
+    """Data-driven interpretation sentences (Turkish UI text) for the simulation page."""
+    out = []
+    month_name = MONTHS_TR[month - 1]
+    m = summary["marmara"]
+
+    if climatology:
+        n_years = clim_end - clim_start + 1
+        out.append({"kind": "info", "text": f"Harita tek bir yılı değil, {clim_start}–{clim_end} arasındaki "
+                                            f"{n_years} {month_name} ayının ortalamasını gösteriyor "
+                                            f"(\"normal bir {month_name}\")."})
+        # selected period's normal vs the full-record normal (shows long-term change)
+        if (clim_start, clim_end) != (MIN_YEAR, MAX_YEAR):
+            period = baseline_conditions(DF, "marmara", "climatology", month=month,
+                                         start_year=clim_start, end_year=clim_end)
+            full = baseline_conditions(DF, "marmara", "climatology", month=month)
+            out.append({"kind": "compare", "text": (
+                f"{clim_start}–{clim_end} döneminin {month_name} normali, tüm kaydın ({MIN_YEAR}–{MAX_YEAR}) "
+                f"normaline göre Marmara'da SST {tr_num(period['sst'] - full['sst'], 2, True)} °C, rüzgâr "
+                f"{tr_num((period['wind'] / full['wind'] - 1) * 100, 0, True)} %, klorofil "
+                f"{tr_num((period['chl'] / full['chl'] - 1) * 100, 0, True)} %.")})
+    else:
+        out.append({"kind": "info", "text": f"Harita {month_name} {year} ayının gerçek uydu ölçümlerini gösteriyor."})
+        actual = baseline_conditions(DF, "marmara", "event", month=month, event_year=year)
+        normal = baseline_conditions(DF, "marmara", "climatology", month=month)
+        a_score = basin_risk(actual, "marmara", 0, 0, 0)
+        n_score = basin_risk(normal, "marmara", 0, 0, 0)
+        diff = a_score - n_score
+        verdict = ("normalden daha riskli" if diff > 2 else
+                   ("normalden daha az riskli" if diff < -2 else "normale yakın"))
+        out.append({"kind": "compare", "text": (
+            f"{month_name} {year}, Marmara'da {verdict} ({tr_num(a_score)} / normal {tr_num(n_score)}). "
+            f"SST {tr_num(actual['sst'] - normal['sst'], 1, True)} °C, rüzgâr "
+            f"{tr_num((actual['wind'] / normal['wind'] - 1) * 100, 0, True)} %, klorofil "
+            f"{tr_num((actual['chl'] / normal['chl'] - 1) * 100, 0, True)} %.")})
+
+    # scenario effect
+    changes = []
+    if d_sst:
+        changes.append(f"sıcaklık {tr_num(d_sst, 1, True)} °C")
+    if d_wind:
+        changes.append(f"rüzgâr {tr_num(d_wind, 0, True)} %")
+    if d_chl:
+        changes.append(f"klorofil/besin {tr_num(d_chl, 0, True)} %")
+    if changes and abs(m["delta"]) < 1:
+        out.append({"kind": "scenario", "text": (
+            f"Senaryo ({', '.join(changes)}) bu ayda Marmara riskini neredeyse değiştirmiyor "
+            f"({tr_num(m['base_score'])} → {tr_num(m['score'])}). Mevsim koşulları senaryo etkisini sınırlıyor.")})
+    elif changes:
+        verb = "yükseltiyor" if m["delta"] > 0 else "düşürüyor"
+        text = (f"Senaryo ({', '.join(changes)}) Marmara riskini {tr_num(m['base_score'])} → "
+                f"{tr_num(m['score'])} puana {verb} ({m['level']}).")
+        ratios = [f"{REGION_LOC[r]}kinin {tr_num(m['delta'] / summary[r]['delta'], 1)} katı"
+                  for r in ("aegean", "blacksea") if m["delta"] > 0.5 and summary[r]["delta"] > 0.5]
+        if ratios and m["delta"] > 0:
+            text += " Marmara'daki artış " + " ve ".join(ratios) + "; kapalı yapısı nedeniyle daha hassas."
+        out.append({"kind": "scenario", "text": text})
+    else:
+        out.append({"kind": "scenario", "text": "Senaryo değişimleri sıfırda: skorlar doğrudan uydu verisinden "
+                                                "hesaplanıyor (hiçbir koşul değiştirilmedi)."})
+
+    # dominant driver
+    top = max(m["drivers"], key=m["drivers"].get)
+    out.append({"kind": "driver", "text": f"Marmara'da riskin en büyük kaynağı {COMPONENT_TR[top]} "
+                                          f"(skorun %{tr_num(m['drivers'][top])}'i)."})
+
+    # rank among the same calendar month (real data only)
+    if not climatology:
+        same = DF[(DF["region"] == "marmara") & (DF["date"].dt.month == month)].dropna(subset=["sst", "wind", "chl"])
+        scores = sorted(((basin_risk(r, "marmara", d_sst, d_wind, d_chl), r["date"].year)
+                         for _, r in same.iterrows()), reverse=True)
+        rank = next((i + 1 for i, (_, y) in enumerate(scores) if y == year), None)
+        if rank:
+            out.append({"kind": "rank", "text": f"Bu koşullarda {month_name} {year}, verideki {len(scores)} "
+                                                f"{month_name} ayı içinde risk sıralamasında {rank}. sırada."})
+
+    # critical locations
+    critical = [p["name"] for p in points if p["score"] >= 75]
+    if critical:
+        out.append({"kind": "alert", "text": f"Kritik eşiği (75) aşan konumlar: {', '.join(critical)}."})
+    else:
+        best = max(points, key=lambda p: p["score"])
+        out.append({"kind": "ok", "text": f"Kritik eşiği aşan konum yok; en yüksek risk {best['name']} "
+                                          f"({tr_num(best['score'])}/100)."})
+    return out
 
 
 @app.get("/api/statistics")

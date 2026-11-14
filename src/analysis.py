@@ -240,10 +240,12 @@ def risk_level(score: float) -> str:
 
 
 def baseline_conditions(df: pd.DataFrame, region: str, mode: str, month: int = 5,
-                        event_year: int = 2021) -> dict:
+                        event_year: int = 2021, start_year: int | None = None,
+                        end_year: int | None = None) -> dict:
     """
     Baseline SST / wind / CHL for a region from the real data.
       mode = "climatology": mean of the given calendar month over all years
+                            (or only start_year..end_year when given)
       mode = "event":       the given month of event_year (e.g. May 2021)
     """
     rows = df[df["region"] == region]
@@ -252,6 +254,10 @@ def baseline_conditions(df: pd.DataFrame, region: str, mode: str, month: int = 5
         rows = rows[(rows[date_col].dt.year == event_year) & (rows[date_col].dt.month == month)]
         return {v: float(rows[v].iloc[0]) for v in ("sst", "wind", "chl")}
     rows = rows[rows[date_col].dt.month == month]
+    if start_year is not None:
+        rows = rows[rows[date_col].dt.year >= start_year]
+    if end_year is not None:
+        rows = rows[rows[date_col].dt.year <= end_year]
     return {
         "sst": float(rows["sst"].mean()),
         "wind": float(rows["wind"].mean()),

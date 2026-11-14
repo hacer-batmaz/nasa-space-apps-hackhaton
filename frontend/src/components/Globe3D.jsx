@@ -1,4 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { geoGraticule10, geoOrthographic, geoPath } from "d3-geo";
+import { feature } from "topojson-client";
+import countries50m from "world-atlas/countries-50m.json";
 
 const SEA_COORDS = {
   marmara: { lon: 28.4, lat: 40.7, label: "40° N / 28° E · MARMARA" },
@@ -6,31 +9,55 @@ const SEA_COORDS = {
   blacksea: { lon: 34.5, lat: 42.0, label: "42° N / 35° E · KARADENİZ" },
 };
 
-// Basitleştirilmiş Türkiye ve çevresi kıyı konturu (ortografik küre görünümü için)
-const ANATOLIA_PATH =
-  "M 145,148 L 160,142 L 178,144 L 195,141 L 215,146 L 222,155 L 214,166 L 192,168 L 168,167 L 150,164 L 143,156 Z";
-const THRACE_PATH = "M 136,142 L 148,139 L 152,145 L 140,147 Z";
-const EUROPE_HINT =
-  "M 95,120 L 118,105 L 145,102 L 162,115 L 142,135 L 122,138 L 105,132 Z";
-const AFRICA_HINT =
-  "M 110,185 L 155,182 L 185,195 L 175,235 L 130,238 L 105,210 Z";
+// Real coastlines (Natural Earth 1:50m via world-atlas), converted once
+const COUNTRIES = feature(countries50m, countries50m.objects.countries).features;
+const TURKEY_ID = "792"; // ISO 3166-1 numeric code of Türkiye
+const GRATICULE = geoGraticule10();
+
+const SIZE = 340;
+const RADIUS = 126;
+// Globe centre sits slightly south-west of the selected sea so all three seas stay visible
+const centreFor = (sea) => [-(sea.lon + 2), -(sea.lat - 4)];
 
 export default function Globe3D({ region = "marmara" }) {
   const [pulse, setPulse] = useState(0);
   const info = SEA_COORDS[region] || SEA_COORDS.marmara;
-
-  // Seçili denize göre küre üzerindeki işaretçi koordinatı
-  const markerPos = {
-    marmara: { x: 152, y: 146 },
-    aegean: { x: 144, y: 156 },
-    blacksea: { x: 184, y: 138 },
-  }[region] || { x: 152, y: 146 };
+  const [rotation, setRotation] = useState(() => centreFor(info));
+  const target = useRef(centreFor(info));
 
   useEffect(() => {
-    const id = setInterval(() => setPulse((p) => (p + 1) % 100), 40);
+    target.current = centreFor(info);
+  }, [info]);
+
+  // pulse ring + smooth rotation towards the selected sea
+  useEffect(() => {
+    const id = setInterval(() => {
+      setPulse((p) => (p + 1) % 100);
+      setRotation(([lambda, phi]) => {
+        const [tl, tp] = target.current;
+        if (Math.abs(tl - lambda) < 0.05 && Math.abs(tp - phi) < 0.05) return [lambda, phi];
+        return [lambda + (tl - lambda) * 0.12, phi + (tp - phi) * 0.12];
+      });
+    }, 40);
     return () => clearInterval(id);
   }, []);
 
+  const projection = useMemo(
+    () => geoOrthographic().scale(RADIUS).translate([SIZE / 2, SIZE / 2]).rotate(rotation).clipAngle(90),
+    [rotation]
+  );
+
+  // land paths only change while the globe is rotating
+  const shapes = useMemo(() => {
+    const path = geoPath(projection);
+    return {
+      graticule: path(GRATICULE),
+      land: COUNTRIES.filter((c) => c.id !== TURKEY_ID).map((c) => path(c)).filter(Boolean),
+      turkey: path(COUNTRIES.find((c) => c.id === TURKEY_ID)),
+    };
+  }, [projection]);
+
+  const markerPos = projection([info.lon, info.lat]) || [SIZE / 2, SIZE / 2];
   const ringRadius = 8 + (pulse / 100) * 14;
   const ringOpacity = 1 - pulse / 100;
 
@@ -42,7 +69,7 @@ export default function Globe3D({ region = "marmara" }) {
       </div>
 
       <svg
-        viewBox="0 0 340 340"
+        viewBox={`0 0 ${SIZE} ${SIZE}`}
         style={{
           width: "100%",
           height: "350px",
@@ -57,9 +84,6 @@ export default function Globe3D({ region = "marmara" }) {
             <stop offset="65%" stopColor="#0d2129" />
             <stop offset="100%" stopColor="#061015" />
           </radialGradient>
-          <clipPath id="globeClip">
-            <circle cx="170" cy="170" r="126" />
-          </clipPath>
         </defs>
 
         {/* Yörünge Halkası */}
@@ -79,36 +103,32 @@ export default function Globe3D({ region = "marmara" }) {
         <circle
           cx="170"
           cy="170"
-          r="126"
+          r={RADIUS}
           fill="url(#oceanSphere)"
           stroke="rgba(163, 195, 206, 0.25)"
           strokeWidth="1"
         />
 
-        {/* Enlem & Boylam Izgarası + Kara Parçaları */}
-        <g clipPath="url(#globeClip)">
-          <ellipse cx="170" cy="170" rx="126" ry="42" fill="none" stroke="rgba(255,255,255,0.06)" />
-          <ellipse cx="170" cy="170" rx="126" ry="88" fill="none" stroke="rgba(255,255,255,0.06)" />
-          <ellipse cx="170" cy="170" rx="45" ry="126" fill="none" stroke="rgba(255,255,255,0.06)" />
-          <ellipse cx="170" cy="170" rx="92" ry="126" fill="none" stroke="rgba(255,255,255,0.06)" />
-
-          <path d={EUROPE_HINT} fill="#18323b" stroke="#294c58" strokeWidth="0.8" />
-          <path d={AFRICA_HINT} fill="#18323b" stroke="#294c58" strokeWidth="0.8" />
-          <path d={THRACE_PATH} fill="#234652" stroke="#4f7c8a" strokeWidth="0.9" />
-          <path d={ANATOLIA_PATH} fill="#234652" stroke="#4f7c8a" strokeWidth="1" />
-        </g>
+        {/* Enlem & Boylam Izgarası + Kara Parçaları (gerçek kıyı çizgileri) */}
+        <path d={shapes.graticule} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.6" />
+        {shapes.land.map((d, i) => (
+          <path key={i} d={d} fill="#18323b" stroke="#294c58" strokeWidth="0.5" strokeLinejoin="round" />
+        ))}
+        {shapes.turkey && (
+          <path d={shapes.turkey} fill="#234652" stroke="#4f7c8a" strokeWidth="0.9" strokeLinejoin="round" />
+        )}
 
         {/* Uydu Tarama Noktası */}
         <circle
-          cx={markerPos.x}
-          cy={markerPos.y}
+          cx={markerPos[0]}
+          cy={markerPos[1]}
           r={ringRadius}
           fill="none"
           stroke="#d8f77a"
           strokeWidth="1.5"
           opacity={ringOpacity}
         />
-        <circle cx={markerPos.x} cy={markerPos.y} r="4.5" fill="#d8f77a" />
+        <circle cx={markerPos[0]} cy={markerPos[1]} r="4.5" fill="#d8f77a" />
       </svg>
 
       <span className="globe-label">{info.label}</span>

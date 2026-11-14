@@ -3,12 +3,14 @@ import { Orbit } from "lucide-react";
 import Home from "./pages/Home";
 import Simulation from "./pages/Simulation";
 import Statistics from "./pages/Statistics";
+import Model from "./pages/Model";
 import Sources from "./pages/Sources";
 
 const NAV_ITEMS = [
   { key: "home", label: "Keşfet" },
   { key: "sim", label: "Simülasyon" },
   { key: "stats", label: "İstatistik" },
+  { key: "model", label: "Yapay Zekâ Modeli" },
   { key: "sources", label: "Kaynaklar & Veri" },
 ];
 
@@ -45,6 +47,7 @@ export default function App() {
         {page === "home" && <Home onNavigate={setPage} />}
         {page === "sim" && <Simulation />}
         {page === "stats" && <Statistics />}
+        {page === "model" && <Model />}
         {page === "sources" && <Sources />}
       </main>
 

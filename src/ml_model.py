@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from sklearn.base import clone
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.pipeline import make_pipeline
@@ -79,14 +80,9 @@ def train_and_evaluate(df: pd.DataFrame, region: str = "marmara", model_type: st
     else:
         importances = {feat: round(100.0 / len(FEATURES), 1) for feat in FEATURES}
 
-    # Full model (tüm veriyle yeniden eğitim)
-    if model_type == "xgb":
-        from xgboost import XGBRegressor
-        full_model = XGBRegressor(n_estimators=150, learning_rate=0.05, max_depth=4, random_state=42)
-    elif model_type == "svr":
-        full_model = make_pipeline(StandardScaler(), SVR(kernel='rbf', C=1.0, epsilon=0.1))
-    else:
-        full_model = RandomForestRegressor(n_estimators=200, max_depth=6, min_samples_leaf=3, random_state=42)
+    # Full model (tüm veriyle yeniden eğitim) — same estimator settings as above, so the
+    # Random Forest fallback also applies here when xgboost is not installed
+    full_model = clone(model)
 
     full_model.fit(data[FEATURES], data["chl_log"])
 
