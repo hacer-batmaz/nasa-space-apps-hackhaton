@@ -1,7 +1,8 @@
 pandas
 numpy
+scipy
 matplotlib
-plotly
+plotly>=5.24
 pymannkendall
-streamlit
+streamlit>=1.40
 openpyxl
