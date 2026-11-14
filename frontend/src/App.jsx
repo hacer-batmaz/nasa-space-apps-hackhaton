@@ -1,48 +1,57 @@
 import { useState } from "react";
-import { Home as HomeIcon, Map, BarChart3, BookOpen, Search } from "lucide-react";
+import { Orbit } from "lucide-react";
 import Home from "./pages/Home";
 import Simulation from "./pages/Simulation";
 import Statistics from "./pages/Statistics";
 import Sources from "./pages/Sources";
 
 const NAV_ITEMS = [
-  { key: "home", label: "Ana Sayfa", icon: HomeIcon },
-  { key: "sim", label: "Risk Simülasyonu", icon: Map },
-  { key: "stats", label: "İstatistik Analizi", icon: BarChart3 },
-  { key: "sources", label: "Kaynaklar ve Veri Setleri", icon: BookOpen },
+  { key: "home", label: "Keşfet" },
+  { key: "sim", label: "Simülasyon" },
+  { key: "stats", label: "İstatistik" },
+  { key: "sources", label: "Kaynaklar & Veri" },
 ];
 
 export default function App() {
   const [page, setPage] = useState("home");
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <Search size={24} color="#0b3d91" />
-          <span>Müsilaj Dedektifi</span>
-        </div>
+    <div>
+      <header className="top-header">
+        <button className="wordmark" onClick={() => setPage("home")}>
+          <Orbit size={26} color="#d8f77a" />
+          <div>
+            MÜSİLAJ
+            <br />
+            DEDEKTİFİ
+            <small>EARTH OBSERVATORY</small>
+          </div>
+        </button>
 
-        <nav className="nav-list">
-          {NAV_ITEMS.map(({ key, label, icon: Icon }) => (
+        <nav className="topnav" aria-label="Ana gezinme">
+          {NAV_ITEMS.map((item) => (
             <button
-              key={key}
-              className={`nav-btn ${page === key ? "active" : ""}`}
-              onClick={() => setPage(key)}
+              key={item.key}
+              className={page === item.key ? "active" : ""}
+              onClick={() => setPage(item.key)}
             >
-              <Icon size={19} />
-              <span>{label}</span>
+              {item.label}
             </button>
           ))}
         </nav>
-      </aside>
+      </header>
 
-      <main className="main-content">
+      <main>
         {page === "home" && <Home onNavigate={setPage} />}
         {page === "sim" && <Simulation />}
         {page === "stats" && <Statistics />}
         {page === "sources" && <Sources />}
       </main>
+
+      <footer className="site-footer">
+        <span>NASA GIOVANNI / MODIS AQUA / MERRA-2</span>
+        <span>NASA SPACE APPS CHALLENGE 2026</span>
+      </footer>
     </div>
   );
 }

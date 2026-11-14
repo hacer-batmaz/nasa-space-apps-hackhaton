@@ -1,6 +1,29 @@
 import { useEffect, useState } from "react";
+import { ArrowUpRight } from "lucide-react";
+import Globe3D from "../components/Globe3D";
 
 const API = "http://127.0.0.1:8000/api";
+
+const SEA_DETAILS = {
+  marmara: {
+    name: "Marmara Denizi",
+    coords: "40,65° N · 28,30° E",
+    summary:
+      "Yarı kapalı yapısı, iki katmanlı akıntı sistemi ve yoğun kentsel-endüstriyel besin yükü nedeniyle ısınma ve rüzgâr zayıflamasına en hassas havza. 2007, 2008 ve 2021 müsilaj salgınlarının merkez üssü.",
+  },
+  aegean: {
+    name: "Ege Denizi (Türkiye Kıyısı)",
+    coords: "38,60° N · 25,80° E",
+    summary:
+      "Çanakkale Boğazı üzerinden Marmara sularıyla etkileşim halindedir. Klorofil-a seviyelerinde son 22 yılda on yılda +%13,1 ile istatistiksel olarak anlamlı artış eğilimi göstermektedir.",
+  },
+  blacksea: {
+    name: "Karadeniz (Türkiye Kıyısı)",
+    coords: "42,00° N · 34,50° E",
+    summary:
+      "Büyük nehir girdileri ve geniş kıta sahanlığı ile yüksek biyolojik üretkenliğe sahiptir. Boğaz çıkışı üzerinden Marmara yüzey suyunu besler.",
+  },
+};
 
 const trNum = (v, d = 2, sign = false) => {
   if (v === null || v === undefined || Number.isNaN(v)) return "–";
@@ -8,13 +31,9 @@ const trNum = (v, d = 2, sign = false) => {
   return txt.replace(".", ",");
 };
 
-const pText = (p) => {
-  if (p === null || p === undefined) return "p = –";
-  return p < 0.001 ? "p < 0,001" : `p = ${trNum(p, 3)}`;
-};
-
 export default function Home({ onNavigate }) {
   const [overview, setOverview] = useState(null);
+  const [selectedSea, setSelectedSea] = useState("marmara");
 
   useEffect(() => {
     fetch(`${API}/overview`)
@@ -23,137 +42,174 @@ export default function Home({ onNavigate }) {
       .catch(console.error);
   }, []);
 
+  const seaInfo = SEA_DETAILS[selectedSea];
+
   return (
-    <div>
-      <div className="hero">
-        <h1>🔎 Müsilaj Dedektifi</h1>
-        <p>
-          <b>Türk Denizlerinde İklim ve Ekosistem Eğilimleri</b> — NASA uydu verileriyle Marmara, Ege ve
-          Karadeniz&apos;de <i>ne değişti, nerede değişti, ne kadar değişti ve bu değişim önemli mi?</i>
+    <div className="page-container">
+      {/* Yörünge Hero Bölümü */}
+      <div className="orbit-hero">
+        <div>
+          <div className="eyebrow mono">YERYÜZÜNÜ ANLAMAK İÇİN YUKARI BAK.</div>
+          <h1>
+            Denizlerin
+            <br />
+            görünmeyen
+            <br />
+            <em>hikâyesi.</em>
+          </h1>
+          <p className="orbit-intro">
+            Uzaydan gelen NASA uydu verileriyle Marmara, Ege ve Karadeniz&apos;in 22 yıllık iklim ve
+            ekosistem değişimini keşfedin.
+          </p>
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <button className="btn-acid" onClick={() => onNavigate("sim")}>
+              <span>Simülasyonu Başlat</span>
+              <ArrowUpRight size={16} />
+            </button>
+            <button className="btn-outline" onClick={() => onNavigate("stats")}>
+              <span>İstatistik Analizi</span>
+              <ArrowUpRight size={15} />
+            </button>
+          </div>
+        </div>
+
+        <Globe3D region={selectedSea} />
+      </div>
+
+      {/* Canlı Veri Şeridi */}
+      <div className="strip">
+        <div>
+          <div className="numeral">
+            22<small>yıl</small>
+          </div>
+          <p>
+            Kesintisiz aylık veri arşivi ({overview ? `${overview.min_year}–${overview.max_year}` : "2003–2024"})
+          </p>
+        </div>
+        <div>
+          <div className="numeral">
+            {overview ? trNum(overview.marmara_sst_change, 2, true) : "+0,83"}
+            <small>°C / 10 yıl</small>
+          </div>
+          <p>Marmara&apos;da deniz yüzeyi ısınma eğilimi</p>
+        </div>
+        <div>
+          <div className="numeral">
+            {overview ? trNum(overview.aegean_chl_change, 1, true) : "+13,1"}
+            <small>% / 10 yıl</small>
+          </div>
+          <p>Ege Denizi klorofil-a değişim oranı</p>
+        </div>
+        <div>
+          <div className="numeral">
+            {overview ? overview.total_months : 264}
+            <small>ay</small>
+          </div>
+          <p>Her deniz havzası için uydu gözlemi</p>
+        </div>
+      </div>
+
+      {/* Deniz Seçimi */}
+      <div className="sea-selection">
+        <span className="mono" style={{ color: "#a1b0b4" }}>
+          BİR DENİZ SEÇİN
+        </span>
+        <div className="sea-buttons">
+          <button className={selectedSea === "marmara" ? "active" : ""} onClick={() => setSelectedSea("marmara")}>
+            Marmara ↗
+          </button>
+          <button className={selectedSea === "aegean" ? "active" : ""} onClick={() => setSelectedSea("aegean")}>
+            Ege ↗
+          </button>
+          <button className={selectedSea === "blacksea" ? "active" : ""} onClick={() => setSelectedSea("blacksea")}>
+            Karadeniz ↗
+          </button>
+        </div>
+      </div>
+
+      <div className="detail-banner">
+        <b>
+          {seaInfo.name} ({seaInfo.coords}):
+        </b>{" "}
+        {seaInfo.summary}
+      </div>
+
+      {/* Müsilaj Bilgilendirme & Tarihçe */}
+      <div className="section-block">
+        <div className="eyebrow mono">EKOSİSTEM MEKANİZMASI</div>
+        <h2 style={{ fontSize: "24px", fontWeight: 400, margin: "10px 0 8px", letterSpacing: "-0.5px" }}>
+          Müsilaj (deniz salyası) nedir ve nasıl tetiklenir?
+        </h2>
+        <p style={{ color: "#a1b0b4", maxWidth: "820px", fontSize: "13px" }}>
+          Müsilaj; fitoplankton başta olmak üzere deniz canlılarının stres altında salgıladığı organik
+          maddelerin kümelenmesiyle oluşan jelimsi yapıdır. Uydu verileri üç temel tetikleyiciyi izlememizi sağlar:
         </p>
-      </div>
 
-      {overview && (
-        <div className="grid-4">
-          <div className="metric-card">
-            <div className="metric-label">Analiz dönemi</div>
-            <div className="metric-value">
-              {overview.min_year}–{overview.max_year}
+        <div className="grid-3">
+          <div className="dark-card">
+            <h4>01 · Yüksek Deniz Sıcaklığı (SST)</h4>
+            <p>
+              Normalden sıcak sular fitoplankton metabolizmasını ve organik madde salgısını hızlandırır;
+              ılık kışlar dikey su karışımını zayıflatır.
+            </p>
+          </div>
+          <div className="dark-card">
+            <h4>02 · Zayıf Rüzgâr ve Durgunluk</h4>
+            <p>
+              Rüzgâr hızı düştüğünde yüzey tabakası karışmaz (tabakalaşma); salgılanan organik maddeler
+              dağılmak yerine yüzeyde ve orta suda birikir.
+            </p>
+          </div>
+          <div className="dark-card">
+            <h4>03 · Aşırı Besin ve Fitoplankton (CHL)</h4>
+            <p>
+              Atık su ve tarımsal girdilerle gelen azot ve fosfor, klorofil-a ile ölçülen fitoplankton
+              yoğunluğunu artırarak müsilajın hammaddesini üretir.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid-2">
+          <div>
+            <div className="eyebrow mono">KRONOLOJİ</div>
+            <h3 style={{ fontSize: "18px", fontWeight: 500, margin: "8px 0" }}>
+              Türkiye&apos;de Müsilaj Geçmişi
+            </h3>
+            <div className="timeline-dark">
+              <p>
+                <b>2007</b> — Marmara Denizi&apos;nde ilk kez geniş ölçekli müsilaj tabakaları raporlandı.
+              </p>
+              <p>
+                <b>2008</b> — Marmara&apos;da yeniden yoğun kümeler görüldü; baskın tür{" "}
+                <i>Gonyaulax fragilis</i> idi.
+              </p>
+              <p>
+                <b>2021</b> — Erken ilkbaharda başlayıp Kuzey Ege ve Batı Karadeniz&apos;e yayılan{" "}
+                <b>tarihin en büyük salgını</b> yaşandı.
+              </p>
             </div>
-            <div className="metric-sub">{overview.total_months} ay</div>
           </div>
-          <div className="metric-card">
-            <div className="metric-label">Marmara ısınması</div>
-            <div className="metric-value">{trNum(overview.marmara_sst_change, 2, true)} °C / 10 yıl</div>
-            <div className="metric-sub">{pText(overview.marmara_sst_p)}</div>
-          </div>
-          <div className="metric-card">
-            <div className="metric-label">Marmara klorofil</div>
-            <div className="metric-value">{trNum(overview.marmara_chl_change, 1, true)} % / 10 yıl</div>
-            <div className="metric-sub">{pText(overview.marmara_chl_p)}</div>
-          </div>
-          <div className="metric-card">
-            <div className="metric-label">Ege klorofil</div>
-            <div className="metric-value">{trNum(overview.aegean_chl_change, 1, true)} % / 10 yıl</div>
-            <div className="metric-sub">{pText(overview.aegean_chl_p)}</div>
-          </div>
-        </div>
-      )}
 
-      <h2 className="section-title">Hızlı başlangıç</h2>
-      <div className="grid-2">
-        <div className="cta-card">
           <div>
-            <h3>🗺️ İnteraktif Türkiye Haritası &amp; Risk Simülasyonu</h3>
-            <p>
-              Gerçek NASA verisinden başlayın; sıcaklığı, rüzgârı ve besin yükünü değiştirin, 16 kıyı
-              noktasında riskin nasıl değiştiğini anlık izleyin.
-            </p>
+            <div className="eyebrow mono">2021 KRİZİNİN ETKİLERİ</div>
+            <h3 style={{ fontSize: "18px", fontWeight: 500, margin: "8px 0" }}>
+              Bölgesel Ekolojik Sonuçlar
+            </h3>
+            <ul style={{ color: "#b5c5c8", fontSize: "12.5px", paddingLeft: "18px", lineHeight: 1.7 }}>
+              <li>
+                <b>Marmara Denizi:</b> Yüzey ve dip ekosistemini kaplayarak balıkçılığı ve deniz turizmini
+                durma noktasına getirdi.
+              </li>
+              <li>
+                <b>Çanakkale Boğazı &amp; Kuzey Ege:</b> Mart–Temmuz arasında yaklaşık 5 ay sürdü; dip
+                canlılarında toplu ölümler gözlendi.
+              </li>
+              <li>
+                <b>Batı Karadeniz:</b> İstanbul Boğazı çıkışında gözlemlendi ancak yoğunluğu Marmara&apos;nın
+                çok altında kaldı.
+              </li>
+            </ul>
           </div>
-          <button className="btn-primary" onClick={() => onNavigate("sim")}>
-            Simülasyonu Başlat →
-          </button>
-        </div>
-
-        <div className="cta-card">
-          <div>
-            <h3>📊 Bilimsel Trend ve İstatistik Analizi</h3>
-            <p>
-              Mann-Kendall, Sen eğimi ve Spearman korelasyonu ile 22 yıllık değişimin gerçekten anlamlı
-              olup olmadığını test edin.
-            </p>
-          </div>
-          <button className="btn-primary" onClick={() => onNavigate("stats")}>
-            Analize Git →
-          </button>
-        </div>
-      </div>
-
-      <h2 className="section-title">Müsilaj (deniz salyası) nedir?</h2>
-      <p style={{ lineHeight: 1.6, marginBottom: "1rem" }}>
-        Müsilaj; fitoplankton başta olmak üzere deniz canlılarının salgıladığı, şekerden zengin organik
-        maddelerin kümelenmesiyle oluşan, jöle kıvamında bir yapıdır. Yüzeyde kahverengi-gri tabakalar
-        oluşturur, ancak büyük kısmı dibe çökerek dip canlılarını boğar; balıkçılığı, turizmi ve deniz
-        ekosistemini ciddi biçimde etkiler.
-      </p>
-
-      <div className="grid-3">
-        <div className="info-card">
-          <h4>🌡️ Yüksek deniz sıcaklığı</h4>
-          <p>
-            Normalden sıcak sular fitoplankton büyümesini ve organik madde salgısını hızlandırır; sıcak
-            kışlar mevsimsel karışımı zayıflatır.
-          </p>
-        </div>
-        <div className="info-card">
-          <h4>🍃 Zayıf rüzgâr ve durgunluk</h4>
-          <p>
-            Rüzgâr azaldığında su karışmaz, yüzey tabakası durgunlaşır (tabakalaşma) ve salgılanan
-            maddeler dağılmak yerine birikir.
-          </p>
-        </div>
-        <div className="info-card">
-          <h4>🌿 Aşırı besin ve fitoplankton</h4>
-          <p>
-            Atık su ve tarımsal girdilerle gelen azot ve fosfor, klorofil-a ile ölçülen fitoplankton
-            biyokütlesini artırır; müsilajın hammaddesi budur.
-          </p>
-        </div>
-      </div>
-
-      <div className="grid-2" style={{ marginTop: "1.6rem" }}>
-        <div>
-          <h2 className="section-title">Türkiye&apos;de müsilaj geçmişi</h2>
-          <div className="timeline">
-            <p>
-              <b>2007</b> — Müsilaj Türkiye sularında, Marmara Denizi&apos;nde ilk kez geniş ölçekte görüldü.
-            </p>
-            <p>
-              <b>2008</b> — Marmara&apos;da yeniden büyük kümeler oluştu; baskın fitoplankton türü{" "}
-              <i>Gonyaulax fragilis</i> idi.
-            </p>
-            <p>
-              <b>2021</b> — Erken ilkbaharda Marmara ve Türkiye&apos;nin Kuzey Ege kıyılarında başladı;
-              kayıtlardaki <b>en büyük salgın</b> oldu. Bu kez baskın tür <i>Phaeocystis pouchetii</i> idi.
-            </p>
-          </div>
-        </div>
-        <div>
-          <h2 className="section-title">2021 krizinin etkileri</h2>
-          <ul style={{ lineHeight: 1.6, paddingLeft: "1.2rem" }}>
-            <li>
-              <b>Marmara:</b> Yüzeyi ve kıyıları kalın tabakalar halinde kapladı; balıkçılık ve turizm
-              durma noktasına geldi.
-            </li>
-            <li>
-              <b>Çanakkale Boğazı ve Kuzey Ege:</b> Örtü tipi müsilaj Mart–Temmuz arasında yaklaşık beş
-              ay sürdü; dip omurgasızlarında toplu ölümler raporlandı.
-            </li>
-            <li>
-              <b>Batı Karadeniz:</b> Boğaz yoluyla bitişik Karadeniz kıyılarında da müsilaj görüldü;
-              ancak yoğunluk Marmara&apos;nın çok altındaydı.
-            </li>
-          </ul>
         </div>
       </div>
     </div>
