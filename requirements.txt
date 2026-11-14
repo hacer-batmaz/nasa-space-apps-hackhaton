@@ -8,3 +8,5 @@ streamlit>=1.40
 openpyxl
 fastapi
 uvicorn
+scikit-learn
+xgboost

@@ -25,6 +25,7 @@ from analysis import (  # noqa: E402
     trend_test,
 )
 from data_loader import load_all, load_catalog  # noqa: E402
+from ml_model import predict_scenario_chl, train_and_evaluate  # noqa: E402
 
 app = FastAPI(title="Müsilaj Dedektifi API")
 
@@ -56,6 +57,19 @@ MAP_POINTS = [
     {"name": "Sinop açıkları", "region": "blacksea", "lat": 42.15, "lon": 35.10, "susceptibility": 0.55, "note": "Açık deniz özellikleri baskın"},
     {"name": "Samsun açıkları", "region": "blacksea", "lat": 41.45, "lon": 36.40, "susceptibility": 0.72, "note": "Kızılırmak ve Yeşilırmak besin girdisi"},
 ]
+
+# Tüm modelleri (RF, XGB, SVR) sunucu açılışında 3 havza için önbelleğe alıyoruz
+ML_MODELS = {}
+for reg in ("marmara", "aegean", "blacksea"):
+    for m_type in ("rf", "xgb", "svr"):
+        ML_MODELS[(reg, m_type)] = train_and_evaluate(DF, reg, m_type)
+
+
+@app.get("/api/ml-report")
+def get_ml_report(region: str = Query("marmara"), model_type: str = Query("rf")) -> dict:
+    key = (region, model_type)
+    bundle = ML_MODELS.get(key, ML_MODELS[("marmara", "rf")])
+    return {k: v for k, v in bundle.items() if k != "_model"}
 
 
 def clean_num(val: Any) -> float | None:
@@ -103,6 +117,7 @@ def get_simulation(
         sst = b["sst"] + d_sst
         wind = max(b["wind"] * (1 + d_wind / 100), 0.1)
         chl = max(b["chl"] * (1 + d_chl / 100), 1e-3)
+        ai_chl = predict_scenario_chl(ML_MODELS[(p["region"], "rf")], sst, wind, b["chl"], month)
         score, comps = risk_score(sst, wind, chl, p["susceptibility"])
         base_score, _ = risk_score(b["sst"], b["wind"], b["chl"], p["susceptibility"])
         points_out.append({
@@ -110,6 +125,7 @@ def get_simulation(
             "sst": round(sst, 2),
             "wind": round(wind, 2),
             "chl": round(chl, 2),
+            "ai_chl": ai_chl,
             "score": round(score, 1),
             "base_score": round(base_score, 1),
             "level": risk_level(score),
@@ -135,7 +151,6 @@ def get_statistics(
     )
     anom, anom_unit = anomaly_for_display(series, variable)
 
-    # Spearman correlations
     chl = get_series(DF, region, "chl", start_year, end_year)
     correlations = []
     for driver, label in (("sst", "SST → Klorofil"), ("wind", "Rüzgâr → Klorofil")):
@@ -157,7 +172,6 @@ def get_statistics(
             "p_best": clean_num(best["p_value"]),
         })
 
-    # Comparison across 3 seas
     comparison = []
     for reg in ("marmara", "aegean", "blacksea"):
         s = get_series(DF, reg, variable, start_year, end_year)

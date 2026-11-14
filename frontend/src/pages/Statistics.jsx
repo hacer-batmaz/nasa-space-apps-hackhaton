@@ -12,14 +12,28 @@ const VARS = {
 };
 const TREND_TR = { increasing: "Artıyor ↑", decreasing: "Azalıyor ↓", "no trend": "Belirgin trend yok →" };
 
+const FEATURE_LABELS = {
+  chl_log_lag1: "Önceki Ay Biyokütle Birikimi (CHL t-1)",
+  month_sin: "Mevsimsel Döngü (Sinüs)",
+  month_cos: "Mevsimsel Döngü (Kosinüs)",
+  sst: "Anlık Deniz Yüzeyi Sıcaklığı (SST)",
+  sst_lag1: "Önceki Ay Sıcaklık Etkisi (SST t-1)",
+  wind: "Anlık Yüzey Rüzgâr Hızı",
+  wind_lag1: "Önceki Ay Durgunluk Etkisi (Rüzgâr t-1)",
+};
+
 export default function Statistics() {
   const [region, setRegion] = useState("marmara");
   const [variable, setVariable] = useState("chl");
   const [startYear, setStartYear] = useState(2003);
   const [endYear, setEndYear] = useState(2024);
+  const [modelType, setModelType] = useState("rf"); // "rf" | "xgb"
   const [res, setRes] = useState(null);
+  const [mlReport, setMlReport] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    setError(null);
     const activeRegion = variable === "flh" ? "marmara" : region;
     if (variable === "flh" && region !== "marmara") setRegion("marmara");
     const params = new URLSearchParams({
@@ -29,15 +43,37 @@ export default function Statistics() {
       end_year: endYear,
     });
     fetch(`${API}/statistics?${params}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`Sunucu hatası: ${r.status}`);
+        return r.json();
+      })
       .then(setRes)
-      .catch(console.error);
+      .catch((err) => setError(err.message));
   }, [region, variable, startYear, endYear]);
+
+  // Seçilen model türüne (rf/xgb) göre YZ raporunu çek
+  useEffect(() => {
+    const activeRegion = variable === "flh" ? "marmara" : region;
+    fetch(`${API}/ml-report?region=${activeRegion}&model_type=${modelType}`)
+      .then((r) => r.json())
+      .then(setMlReport)
+      .catch(console.error);
+  }, [region, variable, modelType]);
+
+  if (error) {
+    return (
+      <div className="page-container" style={{ paddingTop: "40px" }}>
+        <p className="mono" style={{ color: "#ff6b6b" }}>
+          HATA: {error} — Backend (uvicorn api:app --port 8000) çalışıyor mu kontrol edin.
+        </p>
+      </div>
+    );
+  }
 
   if (!res) {
     return (
       <div className="page-container" style={{ paddingTop: "40px" }}>
-        <p className="mono">İSTATİSTİKSEL TESTLER HESAPLANIYOR...</p>
+        <p className="mono">İSTATİSTİKSEL TESTLER VE YAPAY ZEKÂ MODELİ YÜKLENİYOR...</p>
       </div>
     );
   }
@@ -61,6 +97,10 @@ export default function Statistics() {
     yaxis: { gridcolor: "rgba(255,255,255,0.06)" },
     margin: { t: 48, b: 40, l: 55, r: 20 },
   };
+
+  const sortedImportances = mlReport?.feature_importances
+    ? Object.entries(mlReport.feature_importances).sort((a, b) => b[1] - a[1])
+    : [];
 
   return (
     <div className="page-container" style={{ paddingTop: "28px" }}>
@@ -167,31 +207,161 @@ export default function Statistics() {
         />
       </div>
 
-      <div className="grid-3">
-        <div className="dark-card">
-          <h4>❓ Mann-Kendall ve p-değeri</h4>
-          <p>
-            Zaman serisinde sistematik artış/azalış olup olmadığını ölçer. Ardışık ayların benzerliğini
-            düzeltmek için <b>Hamed-Rao düzeltmesi</b> uygulanır.
-          </p>
-        </div>
-        <div className="dark-card">
-          <h4>❓ Neden Log10 dönüşümü?</h4>
-          <p>
-            Alg patlamalarında klorofil onlarca kat sıçrayarak ortalamayı bozar. Log10 dönüşümü oşinografide
-            uluslararası standarttır.
-          </p>
-        </div>
-        <div className="dark-card">
-          <h4>❓ Mevsimsellikten arındırma</h4>
-          <p>
-            Her aydan o takvim ayının 22 yıllık ortalaması çıkarılır; böylece yaz-kış döngüsü elenir,
-            gerçek iklim sapması kalır.
-          </p>
-        </div>
-      </div>
+      {/* YZ MODEL DOĞRULAMA VE MODEL SEÇİM PANELİ */}
+      {mlReport && !mlReport.error && (
+        <div className="section-block" style={{ marginTop: "36px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+            <div>
+              <div className="eyebrow mono">MAKİNE ÖĞRENMESİ PREDİKTÖRÜ</div>
+              <h2 style={{ fontSize: "26px", fontWeight: 400, letterSpacing: "-0.6px", margin: "6px 0 4px" }}>
+                Yapay Zekâ Model Karşılaştırma &amp; Kriz Testi ({REGIONS[mlReport.region]})
+              </h2>
+            </div>
+            {/* Model Seçim Butonları */}
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                className={`btn-outline ${modelType === "rf" ? "active" : ""}`}
+                onClick={() => setModelType("rf")}
+                style={{ padding: "7px 14px", fontSize: "11px", borderColor: modelType === "rf" ? "var(--acid)" : "#3b4748" }}
+              >
+                Random Forest
+              </button>
+              <button
+                className={`btn-outline ${modelType === "xgb" ? "active" : ""}`}
+                onClick={() => setModelType("xgb")}
+                style={{ padding: "7px 14px", fontSize: "11px", borderColor: modelType === "xgb" ? "var(--acid)" : "#3b4748" }}
+              >
+                XGBoost (Boosting)
+              </button>
+              <button
+                className={`btn-outline ${modelType === "svr" ? "active" : ""}`}
+                onClick={() => setModelType("svr")}
+                style={{ padding: "7px 14px", fontSize: "11px", borderColor: modelType === "svr" ? "var(--acid)" : "#3b4748" }}
+              >
+                SVR (Destek Vektör Regresyon)
+              </button>
+            </div>
+          </div>
 
-      <div className="dark-card" style={{ marginTop: "16px" }}>
+          <p style={{ color: "#a1b0b4", fontSize: "13px", maxWidth: "850px", margin: "10px 0 16px" }}>
+            Seçilen Algoritma: <b style={{ color: "var(--acid)" }}>{mlReport.model_name}</b>. Model{" "}
+            <b>{mlReport.train_period}</b> ({mlReport.train_samples} ay) ile eğitilmiş, <b>{mlReport.test_period}</b> (
+            {mlReport.test_samples} ay — 2021 büyük müsilaj krizi dahil) kör test setinde doğrulanmıştır.
+          </p>
+
+          <div className="strip" style={{ marginTop: "8px" }}>
+            <div>
+              <div className="numeral" style={{ fontSize: "24px", color: "var(--acid)" }}>
+                {mlReport.train_period}
+              </div>
+              <p>Eğitim Seti (%80)</p>
+            </div>
+            <div>
+              <div className="numeral" style={{ fontSize: "24px", color: "#4fd1b5" }}>
+                {mlReport.test_period}
+              </div>
+              <p>Kör Test Seti (%20)</p>
+            </div>
+            <div>
+              <div className="numeral" style={{ fontSize: "24px", color: "var(--acid)" }}>
+                {mlReport.r2_score.toFixed(2).replace(".", ",")}
+              </div>
+              <p>R² Açıklayıcılık Skoru</p>
+            </div>
+            <div>
+              <div className="numeral" style={{ fontSize: "24px" }}>
+                ±{mlReport.mae.toFixed(2).replace(".", ",")} <small>mg/m³</small>
+              </div>
+              <p>Ortalama Mutlak Hata (MAE)</p>
+            </div>
+          </div>
+
+          <div className="grid-2" style={{ marginTop: "20px" }}>
+            <div className="dark-card">
+              <PlotChart
+                data={[
+                  {
+                    x: mlReport.test_dates,
+                    y: mlReport.actual_chl,
+                    type: "scatter",
+                    mode: "lines+markers",
+                    name: "Gerçek NASA Uydusu (MODIS)",
+                    line: { color: "#4fd1b5", width: 2 },
+                    marker: { size: 4 },
+                  },
+                  {
+                    x: mlReport.test_dates,
+                    y: mlReport.predicted_chl,
+                    type: "scatter",
+                    mode: "lines+markers",
+                    name: `YZ Tahmini (${modelType.toUpperCase()})`,
+                    line: { color: "#d8f77a", width: 2.5, dash: "dot" },
+                    marker: { size: 4 },
+                  },
+                ]}
+                layout={{
+                  ...darkPlotLayout,
+                  title: { text: `Kör Test Dönemi: Gerçek vs. YZ Klorofil-a (${modelType.toUpperCase()})`, font: { size: 13.5 } },
+                  yaxis: { ...darkPlotLayout.yaxis, title: "Klorofil-a (mg/m³)", rangemode: "tozero" },
+                  shapes: [
+                    {
+                      type: "rect",
+                      xref: "x",
+                      yref: "paper",
+                      x0: "2021-03-01",
+                      x1: "2021-07-01",
+                      y0: 0,
+                      y1: 1,
+                      fillcolor: "rgba(216, 247, 122, 0.14)",
+                      line: { width: 0 },
+                    },
+                  ],
+                  annotations: [
+                    {
+                      x: "2021-05-01",
+                      y: 1,
+                      yref: "paper",
+                      text: "2021 Müsilaj Zirvesi",
+                      showarrow: false,
+                      font: { color: "#d8f77a", size: 10 },
+                    },
+                  ],
+                  legend: { orientation: "h", y: -0.22 },
+                  height: 360,
+                }}
+              />
+            </div>
+
+            <div className="dark-card">
+              <h4>Öznitelik Önem Dereceleri (Feature Importance)</h4>
+              <p style={{ fontSize: "12px", color: "#9ca8aa", marginBottom: "14px" }}>
+                Modelin klorofil sıçramalarını tahmin ederken hangi değişkenlere ağırlık verdiği:
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {sortedImportances.map(([feat, pct]) => (
+                  <div key={feat}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
+                      <span>{FEATURE_LABELS[feat] || feat}</span>
+                      <b style={{ color: "var(--acid)" }}>%{pct.toFixed(1).replace(".", ",")}</b>
+                    </div>
+                    <div style={{ width: "100%", height: "7px", background: "#16272e", borderRadius: "4px", overflow: "hidden" }}>
+                      <div
+                        style={{
+                          width: `${Math.min(pct * 1.4, 100)}%`,
+                          height: "100%",
+                          background: "linear-gradient(90deg, #4fd1b5, #d8f77a)",
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="panel-card dark-card" style={{ marginTop: "20px" }}>
         <h4>Ek İstatistiksel Test: Spearman Sıra Korelasyonu (0–3 Ay Gecikmeli)</h4>
         <table className="dark-table" style={{ marginTop: "10px" }}>
           <thead>
