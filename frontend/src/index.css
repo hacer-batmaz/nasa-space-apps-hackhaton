@@ -1,0 +1,375 @@
+@import "leaflet/dist/leaflet.css";
+
+:root {
+  --navy: #0b3d91;
+  --blue: #1565c0;
+  --teal: #00897b;
+  --bg: #f4f7fb;
+  --card: #ffffff;
+  --border: #dce4ef;
+  --text: #1e293b;
+  --muted: #64748b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar: Kutu yok, sadece çizgilerle ayrılmış büyük fontlu menü */
+.sidebar {
+  width: 270px;
+  background: #ffffff;
+  border-right: 1px solid var(--border);
+  padding: 1.6rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.brand {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 1.6rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #d8e1ec;
+  padding: 0.85rem 0.25rem;
+  font-size: 1.08rem;
+  font-weight: 500;
+  color: #425262;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s ease;
+}
+
+.nav-btn:last-child {
+  border-bottom: none;
+}
+
+.nav-btn:hover {
+  color: var(--navy);
+}
+
+.nav-btn.active {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+/* Ana İçerik */
+.main-content {
+  flex: 1;
+  padding: 1.8rem 2.2rem;
+  max-width: 1440px;
+  overflow-x: hidden;
+}
+
+/* Hero: Arka plan kaldırılmış şeffaf tasarım */
+.hero {
+  background: transparent;
+  padding: 0.2rem 0 1.2rem 0;
+  border-bottom: 2px solid #e3e8f0;
+  margin-bottom: 1.4rem;
+}
+
+.hero h1 {
+  margin: 0 0 0.45rem 0;
+  color: var(--navy);
+  font-size: 2.3rem;
+}
+
+.hero p {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.55;
+  color: #2c3e50;
+}
+
+/* Eşit Hizalı Grid ve Kart Yapıları */
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.2rem;
+  align-items: stretch;
+}
+
+.metric-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+}
+
+.metric-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.metric-sub {
+  font-size: 0.84rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+/* Hızlı Başlangıç Kutuları: Eşit Yükseklik ve Alt Buton Hizası */
+.cta-card {
+  background: var(--card);
+  border: 2px solid var(--blue);
+  border-radius: 16px;
+  padding: 1.35rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  min-height: 215px;
+}
+
+.cta-card h3 {
+  margin: 0 0 0.6rem 0;
+  color: var(--navy);
+  font-size: 1.22rem;
+  line-height: 1.35;
+}
+
+.cta-card p {
+  margin: 0 0 1.2rem 0;
+  line-height: 1.5;
+  color: #2c3e50;
+}
+
+.btn-primary {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.72rem 1.1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.15s;
+}
+
+.btn-primary:hover {
+  background: var(--navy);
+}
+
+/* Müsilaj Nedir Kartları: Eşit Yükseklik ve Başlık Hizası */
+.info-card {
+  background: #f7f9fc;
+  border: 1px solid #e3e8f0;
+  border-radius: 14px;
+  padding: 1.2rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  height: 100%;
+  min-height: 185px;
+}
+
+.info-card h4 {
+  margin: 0 0 0.6rem 0;
+  color: var(--navy);
+  font-size: 1.12rem;
+  line-height: 1.35;
+}
+
+.info-card p {
+  margin: 0;
+  font-size: 0.96rem;
+  line-height: 1.5;
+  color: #2c3e50;
+}
+
+.timeline {
+  border-left: 3px solid var(--blue);
+  padding-left: 1rem;
+}
+
+.section-title {
+  margin: 1.6rem 0 0.8rem 0;
+  font-size: 1.35rem;
+  color: var(--text);
+}
+
+/* Simülasyon Harita Alanı */
+.sim-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: linear-gradient(90deg, #0f1f1a 0%, #14281f 100%);
+  color: #e6efe9;
+  padding: 1.1rem 1.5rem;
+  border-radius: 12px 12px 0 0;
+}
+
+.sim-kicker {
+  color: #4fd1b5;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.sim-title {
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0.15rem 0;
+}
+
+.sim-stats {
+  display: flex;
+  gap: 2rem;
+}
+
+.sim-stat-val {
+  color: #e8b84a;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.sim-body {
+  display: grid;
+  grid-template-columns: 2.5fr 1fr;
+  background: #12221c;
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+  margin-bottom: 1.4rem;
+}
+
+.sim-controls {
+  padding: 1.2rem;
+  color: #dfe9e4;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sim-controls label {
+  display: block;
+  font-size: 0.88rem;
+  margin-bottom: 0.3rem;
+  color: #cfe0d8;
+}
+
+.sim-controls input[type="range"],
+.sim-controls select {
+  width: 100%;
+}
+
+.alert-box {
+  background: #eff6ff;
+  border-left: 4px solid var(--blue);
+  padding: 1rem 1.2rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  line-height: 1.55;
+}
+
+.alert-box.success {
+  background: #ecfdf5;
+  border-left-color: #10b981;
+}
+
+.panel-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.2rem;
+  margin-bottom: 1.2rem;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.65rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.data-table th {
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 960px) {
+  .app-shell {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .grid-4,
+  .grid-3,
+  .grid-2,
+  .sim-body {
+    grid-template-columns: 1fr;
+  }
+}
