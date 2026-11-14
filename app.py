@@ -94,18 +94,66 @@ MAP_POINTS = [
 st.markdown(
     """
     <style>
-      .hero {background: linear-gradient(120deg,#0b3d91 0%,#1565c0 55%,#00897b 100%);
-             color:#fff;padding:2.2rem 2.4rem;border-radius:18px;margin-bottom:1.2rem;}
-      .hero h1 {color:#fff;font-size:2.3rem;margin:0 0 .4rem 0;}
-      .hero p {font-size:1.08rem;opacity:.93;margin:0;}
-      .card {background:#f7f9fc;border:1px solid #e3e8f0;border-radius:14px;padding:1.1rem 1.2rem;height:100%;}
-      .card h4 {margin-top:0;}
-      .cta {background:#ffffff;border:2px solid #1565c0;border-radius:16px;padding:1.3rem 1.4rem;}
-      .cta h3 {margin-top:0;color:#0b3d91;}
+      .hero {background: transparent;
+             padding: 0.4rem 0 1.2rem 0;
+             border-bottom: 2px solid #e3e8f0;
+             margin-bottom: 1.4rem;}
+      .hero h1 {color: #0b3d91; font-size: 2.35rem; margin: 0 0 .45rem 0;}
+      .hero p {color: #2c3e50; font-size: 1.08rem; line-height: 1.55; margin: 0;}
+      .card {background:#f7f9fc;border:1px solid #e3e8f0;border-radius:14px;padding:1.2rem 1.3rem;
+             height:100%;min-height:195px;display:flex;flex-direction:column;justify-content:flex-start;
+             box-sizing:border-box;margin-bottom:.6rem;}
+      .card h4 {margin:0 0 .6rem 0;font-size:1.12rem;line-height:1.35;color:#0b3d91;}
+      .card p {margin:0;color:#2c3e50;line-height:1.5;font-size:.96rem;}
+      .cta {background:#ffffff;border:2px solid #1565c0;border-radius:16px;padding:1.3rem 1.4rem;
+            min-height:175px;display:flex;flex-direction:column;justify-content:space-between;
+            margin-bottom:.6rem;box-sizing:border-box;}
+      .cta h3 {margin:0 0 .6rem 0;color:#0b3d91;font-size:1.22rem;line-height:1.35;}
+      .cta p {margin:0;color:#2c3e50;line-height:1.5;}
       .timeline {border-left:3px solid #1565c0;padding-left:1rem;margin-left:.3rem;}
       .timeline p {margin:.2rem 0 .8rem 0;}
       .badge {display:inline-block;padding:.25rem .7rem;border-radius:999px;color:#fff;font-weight:600;}
       .small {font-size:.86rem;color:#5f6b7a;}
+      /* ---------- sidebar navigation (no boxes, divider lines only) ---------- */
+      section[data-testid="stSidebar"] div[data-testid="stElementContainer"]:has(button[kind="primary"]),
+      section[data-testid="stSidebar"] div[data-testid="stElementContainer"]:has(button[kind="secondary"]) {
+          margin-bottom: 0 !important;
+          border-bottom: 1px solid #d8e1ec !important;
+      }
+      section[data-testid="stSidebar"] div[data-testid="stElementContainer"]:has(button[kind="primary"]):last-of-type,
+      section[data-testid="stSidebar"] div[data-testid="stElementContainer"]:has(button[kind="secondary"]):last-of-type {
+          border-bottom: none !important;
+      }
+      section[data-testid="stSidebar"] div.stButton > button {
+          border: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+          border-radius: 0 !important;
+          background: transparent !important;
+          font-size: 1.08rem !important;
+          padding: 0.8rem 0.25rem !important;
+          justify-content: flex-start !important;
+          margin: 0 !important;
+          transition: color 0.15s ease !important;
+      }
+      section[data-testid="stSidebar"] div.stButton > button p {
+          font-size: 1.08rem !important;
+      }
+      section[data-testid="stSidebar"] div.stButton > button[kind="primary"],
+      section[data-testid="stSidebar"] div.stButton > button[kind="primary"] p {
+          color: #0b3d91 !important;
+          font-weight: 700 !important;
+      }
+      section[data-testid="stSidebar"] div.stButton > button[kind="secondary"],
+      section[data-testid="stSidebar"] div.stButton > button[kind="secondary"] p {
+          color: #425262 !important;
+          font-weight: 500 !important;
+      }
+      section[data-testid="stSidebar"] div.stButton > button:hover,
+      section[data-testid="stSidebar"] div.stButton > button:hover p {
+          background: transparent !important;
+          color: #0b3d91 !important;
+      }
       /* ---------- map page (dark green design) ---------- */
       .map-header {display:flex;justify-content:space-between;align-items:flex-end;gap:2rem;
                    background:linear-gradient(90deg,#0f1f1a 0%,#14281f 100%);color:#e6efe9;
@@ -218,24 +266,28 @@ def page_home(df: pd.DataFrame) -> None:
 
     st.write("")
     st.subheader("Hızlı başlangıç")
-    a, b = st.columns(2)
+    a, b = st.columns(2, gap="medium")
     with a:
         st.markdown(
-            """<div class="cta"><h3>🗺️ İnteraktif Türkiye Haritası & Müsilaj Risk Simülasyonu</h3>
-            <p>Gerçek NASA verisinden başlayın; sıcaklığı, rüzgârı ve besin yükünü değiştirin,
-            16 kıyı noktasında riskin nasıl değiştiğini anlık izleyin.</p></div>""",
+            """<div class="cta">
+              <h3>🗺️ İnteraktif Türkiye Haritası & Risk Simülasyonu</h3>
+              <p>Gerçek NASA verisinden başlayın; sıcaklığı, rüzgârı ve besin yükünü değiştirin,
+              16 kıyı noktasında riskin nasıl değiştiğini anlık izleyin.</p>
+            </div>""",
             unsafe_allow_html=True,
         )
-        st.button("Simülasyonu Başlat →", type="primary", width="stretch",
+        st.button("Simülasyonu Başlat →", type="primary", use_container_width=True,
                   on_click=go_to, args=("sim",))
     with b:
         st.markdown(
-            """<div class="cta"><h3>📊 Bilimsel Trend ve İstatistik Analizi</h3>
-            <p>Mann-Kendall, Sen eğimi ve Spearman korelasyonu ile
-            22 yıllık değişimin gerçekten anlamlı olup olmadığını test edin.</p></div>""",
+            """<div class="cta">
+              <h3>📊 Bilimsel Trend ve İstatistik Analizi</h3>
+              <p>Mann-Kendall, Sen eğimi ve Spearman korelasyonu ile
+              22 yıllık değişimin gerçekten anlamlı olup olmadığını test edin.</p>
+            </div>""",
             unsafe_allow_html=True,
         )
-        st.button("Analize Git →", type="primary", width="stretch",
+        st.button("Analize Git →", type="primary", use_container_width=True,
                   on_click=go_to, args=("stats",))
 
     st.divider()
@@ -246,22 +298,28 @@ def page_home(df: pd.DataFrame) -> None:
         "oluşturur, ancak büyük kısmı dibe çökerek dip canlılarını boğar; balıkçılığı, turizmi ve deniz "
         "ekosistemini ciddi biçimde etkiler."
     )
-    t1, t2, t3 = st.columns(3)
+    t1, t2, t3 = st.columns(3, gap="medium")
     with t1:
         st.markdown(
-            """<div class="card"><h4>🌡️ Yüksek deniz sıcaklığı</h4>
-            Normalden sıcak sular fitoplankton büyümesini ve organik madde salgısını hızlandırır;
-            sıcak kışlar mevsimsel karışımı zayıflatır.</div>""", unsafe_allow_html=True)
+            """<div class="card">
+              <h4>🌡️ Yüksek deniz sıcaklığı</h4>
+              <p>Normalden sıcak sular fitoplankton büyümesini ve organik madde salgısını hızlandırır;
+              sıcak kışlar mevsimsel karışımı zayıflatır.</p>
+            </div>""", unsafe_allow_html=True)
     with t2:
         st.markdown(
-            """<div class="card"><h4>🍃 Zayıf rüzgâr ve durgunluk</h4>
-            Rüzgâr azaldığında su karışmaz, yüzey tabakası durgunlaşır (tabakalaşma) ve salgılanan
-            maddeler dağılmak yerine birikir.</div>""", unsafe_allow_html=True)
+            """<div class="card">
+              <h4>🍃 Zayıf rüzgâr ve durgunluk</h4>
+              <p>Rüzgâr azaldığında su karışmaz, yüzey tabakası durgunlaşır (tabakalaşma) ve salgılanan
+              maddeler dağılmak yerine birikir.</p>
+            </div>""", unsafe_allow_html=True)
     with t3:
         st.markdown(
-            """<div class="card"><h4>🌿 Aşırı besin ve fitoplankton</h4>
-            Atık su ve tarımsal girdilerle gelen azot ve fosfor, klorofil-a ile ölçülen fitoplankton
-            biyokütlesini artırır; müsilajın hammaddesi budur.</div>""", unsafe_allow_html=True)
+            """<div class="card">
+              <h4>🌿 Aşırı besin ve fitoplankton</h4>
+              <p>Atık su ve tarımsal girdilerle gelen azot ve fosfor, klorofil-a ile ölçülen fitoplankton
+              biyokütlesini artırır; müsilajın hammaddesi budur.</p>
+            </div>""", unsafe_allow_html=True)
 
     st.write("")
     left, right = st.columns([1.1, 1])
@@ -292,23 +350,6 @@ def page_home(df: pd.DataFrame) -> None:
               ancak yoğunluk Marmara'nın çok altındaydı.
             """
         )
-
-    with st.expander("📚 Kaynaklar ve veri setleri"):
-        st.markdown(
-            """
-            - Savun-Hekimoğlu & Gazioğlu (2021), *Mucilage Problem in the Semi-Enclosed Seas*, Int. J. Environment and Geoinformatics 8(4).
-            - Özalp (2021), *Mucilage in the Çanakkale Strait and North Aegean Sea*, Journal of the Black Sea/Mediterranean Environment 27(2).
-            - Journal of the Black Sea/Mediterranean Environment (2021), Editör notu: 2021 Marmara müsilajı özel sayısı.
-            - Medvedeva & Stanichny (2022), *Outbreak of marine mucilage in the Sea of Marmara in 2021*, Marine Biological Journal 7(1).
-            """
-        )
-        catalog = get_catalog()
-        if not catalog.empty:
-            st.markdown("**Kullanılan NASA veri setleri** (Giovanni'de tekrar üretme linkleriyle):")
-            st.dataframe(catalog[["file", "variable_name", "region", "source", "unit", "start", "end",
-                                  "giovanni_url"]],
-                         column_config={"giovanni_url": st.column_config.LinkColumn("Giovanni linki")},
-                         hide_index=True, width="stretch")
 
 
 # =============================================================================== page: simulation
@@ -410,7 +451,7 @@ def page_simulation(df: pd.DataFrame) -> None:
         # ---- player -----------------------------------------------------------------------
         play_col, slider_col = st.columns([1.25, 2])
         play_label = "⏸ Durdur" if st.session_state["playing"] else "▶ Oynat"
-        if play_col.button(play_label, type="primary", width="stretch"):
+        if play_col.button(play_label, type="primary", use_container_width=True):
             st.session_state["playing"] = not st.session_state["playing"]
             st.rerun()
         slider_col.select_slider("Ay", options=list(range(len(months))), format_func=lambda i: labels[i],
@@ -437,7 +478,6 @@ def page_simulation(df: pd.DataFrame) -> None:
                     '7. yakınlaştırma düzeyidir; bulut veya yörünge boşluklarında karo gelmeyebilir.</p>',
                     unsafe_allow_html=True)
         focus = st.radio("Harita odağı", list(MAP_FOCUS), horizontal=True)
-
 
     # ---- scenario bar under the map ---------------------------------------------------------
     map_slot = map_col.empty()
@@ -485,7 +525,7 @@ def page_simulation(df: pd.DataFrame) -> None:
     center, zoom = MAP_FOCUS[focus]
     fig = risk_map(points, base_map, overlays, gibs_day, BASIN_BOXES, REGION_COLORS, REGION_TR,
                    show_points=show_points, show_boxes=show_boxes, height=760, center=center, zoom=zoom)
-    map_slot.plotly_chart(fig, width="stretch", config={"scrollZoom": True, "displaylogo": False})
+    map_slot.plotly_chart(fig, use_container_width=True, config={"scrollZoom": True, "displaylogo": False})
     note_slot.markdown('<div class="map-note">Kapsam: Noktalar kendi havzasının ortalama uydu değerlerini kullanır; '
                        'noktalar arası fark yerel duyarlılık katsayısından gelir. Skor bir senaryo göstergesidir, '
                        'tahmin değildir.</div>', unsafe_allow_html=True)
@@ -493,7 +533,7 @@ def page_simulation(df: pd.DataFrame) -> None:
     # ---- panel (lower part) -----------------------------------------------------------------
     with panel.container(key="map_panel_lower"):
         st.markdown('<p class="panel-h">Risk skoru zaman serisi</p>', unsafe_allow_html=True)
-        st.plotly_chart(risk_timeseries_chart(series, selected), width="stretch",
+        st.plotly_chart(risk_timeseries_chart(series, selected), use_container_width=True,
                         config={"displayModeBar": False})
         st.markdown('<p class="panel-note">Gerçek aylık NASA verisi + seçili senaryo değişimleri. '
                     'Turkuaz nokta seçili ayı, mor bant kritik bölgeyi (75+) gösterir.</p>', unsafe_allow_html=True)
@@ -533,7 +573,7 @@ def page_simulation(df: pd.DataFrame) -> None:
                  color_discrete_map={"Sıcaklık": "#e53935", "Durgunluk (zayıf rüzgâr)": "#8e24aa",
                                      "Klorofil / besin": "#43a047"}, height=340)
     bar.update_layout(yaxis_range=[0, 100], margin={"t": 10})
-    st.plotly_chart(bar, width="stretch")
+    st.plotly_chart(bar, use_container_width=True)
 
     with st.expander("ℹ️ Risk skoru nasıl hesaplanıyor? (yöntem ve sınırlamalar)"):
         st.markdown("Her etken 0–1 arasına yumuşak bir lojistik eğriyle ölçeklenir:")
@@ -555,7 +595,7 @@ def page_simulation(df: pd.DataFrame) -> None:
     with st.expander("📋 Seçili ayın baz değerleri (gerçek NASA verisi)"):
         base_tbl = pd.DataFrame(base).T.rename(index=REGION_TR, columns={"sst": "SST (°C)", "wind": "Rüzgâr (m/s)",
                                                                         "chl": "Klorofil (mg/m³)"})
-        st.dataframe(base_tbl.style.format("{:.2f}"), width="stretch")
+        st.dataframe(base_tbl.style.format("{:.2f}"), use_container_width=True)
 
     st.markdown('<div class="map-footer">Veri: NASA Giovanni — MODIS-Aqua (SST, Klorofil-a), MERRA-2 (rüzgâr) · '
                 'Klorofil/SST görüntüleri: NASA GIBS / EOSDIS · Altlık: © OpenStreetMap, © CARTO, Esri · '
@@ -670,7 +710,7 @@ def page_statistics(df: pd.DataFrame) -> None:
                       yaxis_title=f"{name} ({unit})", height=420, margin={"t": 50},
                       yaxis_type="log" if log_transform else "linear",
                       legend={"orientation": "h", "y": -0.15})
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
     # Chart 2: anomaly bars
     display_anomaly, anomaly_unit = anomaly_for_display(series, variable)
@@ -680,7 +720,7 @@ def page_statistics(df: pd.DataFrame) -> None:
     fig2.add_vrect(x0="2021-04-01", x1="2021-07-01", fillcolor="orange", opacity=0.15, line_width=0)
     fig2.update_layout(title=f"Mevsimsellikten arındırılmış aylık anomali ({anomaly_unit})",
                        yaxis_title=anomaly_unit, height=360, margin={"t": 50})
-    st.plotly_chart(fig2, width="stretch")
+    st.plotly_chart(fig2, use_container_width=True)
 
     info_boxes(variable)
 
@@ -703,7 +743,7 @@ def page_statistics(df: pd.DataFrame) -> None:
     corr_df = pd.DataFrame(corr_rows)
     st.dataframe(corr_df.style.format({"ρ (aynı ay)": "{:+.2f}", "p (aynı ay)": "{:.3f}",
                                        "ρ (en güçlü)": "{:+.2f}", "p (en güçlü)": "{:.3f}"}),
-                 hide_index=True, width="stretch")
+                 hide_index=True, use_container_width=True)
     st.caption(correlation_sentence(corr_df))
     with st.expander("Spearman korelasyonu nedir?"):
         st.markdown("İki değişkenin değerlerini **sıralarına** göre karşılaştırır; biri artarken diğeri de artma "
@@ -820,10 +860,10 @@ def comparison_chart(df: pd.DataFrame, variable: str, start_year: int, end_year:
     fig.add_vrect(x0="2021-04-01", x1="2021-07-01", fillcolor="orange", opacity=0.15, line_width=0)
     fig.update_layout(title=f"12 aylık hareketli ortalama anomali — {name}", yaxis_title=anomaly_unit,
                       height=420, margin={"t": 50}, legend={"orientation": "h", "y": -0.15})
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
     table = pd.DataFrame(rows)
     if not table.empty:
-        st.dataframe(table.drop(columns=["_dir", "_sig"]), hide_index=True, width="stretch")
+        st.dataframe(table.drop(columns=["_dir", "_sig"]), hide_index=True, use_container_width=True)
         sig = table[table["_sig"]]
         if {"increasing", "decreasing"} <= set(sig["_dir"]):
             up = ", ".join(sig[sig["_dir"] == "increasing"]["Bölge"])
@@ -843,6 +883,48 @@ def compare_regions(df: pd.DataFrame, variable: str, start_year: int, end_year: 
     info_boxes(variable)
 
 
+# =============================================================================== page: sources
+def page_sources() -> None:
+    st.header("📚 Kaynaklar ve NASA Veri Setleri")
+    st.markdown(
+        "Bu çalışmada kullanılan uydu gözlemleri, yeniden analiz (reanalysis) verileri ve bilimsel literatür "
+        "aşağıda şeffaflık ve tekrar üretilebilirlik ilkesi gereği eksiksiz listelenmiştir."
+    )
+
+    st.subheader("1. Kullanılan NASA Veri Setleri ve Giovanni Doğrulama Linkleri")
+    catalog = get_catalog()
+    if not catalog.empty:
+        st.dataframe(
+            catalog[["file", "variable_name", "region", "source", "unit", "start", "end", "giovanni_url"]],
+            column_config={
+                "file": "Dosya Adı",
+                "variable_name": "Değişken",
+                "region": "Bölge",
+                "source": "Uydu / Model Kaynağı",
+                "unit": "Birim",
+                "start": "Başlangıç",
+                "end": "Bitiş",
+                "giovanni_url": st.column_config.LinkColumn("Giovanni Doğrulama Linki"),
+            },
+            hide_index=True,
+            use_container_width=True,
+        )
+    else:
+        st.info("Veri kataloğu (`data/data_catalog.csv`) bulunamadı.")
+
+    st.divider()
+    st.subheader("2. Bilimsel Literatür ve Referanslar")
+    st.markdown(
+        """
+        - **Savun-Hekimoğlu & Gazioğlu (2021)**, *Mucilage Problem in the Semi-Enclosed Seas: Recent Outbreak in the Sea of Marmara*, International Journal of Environment and Geoinformatics, 8(4), 402–413.
+        - **Özalp (2021)**, *First massive mucilage event observed in deep waters of Çanakkale Strait (Dardanelles), Turkey*, Journal of the Black Sea / Mediterranean Environment, 27(2), 149–166.
+        - **Journal of the Black Sea / Mediterranean Environment (2021)**, Editör notu: *2021 Marmara Müsilajı Özel Sayısı*.
+        - **Medvedeva & Stanichny (2022)**, *Outbreak of marine mucilage in the Sea of Marmara in 2021 according to satellite data*, Marine Biological Journal, 7(1), 103–106.
+        - **Hamed & Rao (1998)**, *A modified Mann-Kendall trend test for autocorrelated data*, Journal of Hydrology, 204(1–4), 182–196.
+        """
+    )
+
+
 # =============================================================================== main
 def main() -> None:
     try:
@@ -851,24 +933,38 @@ def main() -> None:
         st.error(f"Veri bulunamadı: {err}. Giovanni CSV dosyalarını data/raw/<değişken>/ klasörlerine koyun.")
         st.stop()
 
-    pages = {"home": "🏠 Ana Sayfa", "sim": "🗺️ Risk Simülasyonu", "stats": "📊 İstatistik Analizi"}
+    pages = {
+        "home": "🏠 Ana Sayfa",
+        "sim": "🗺️ Risk Simülasyonu",
+        "stats": "📊 İstatistik Analizi",
+        "sources": "📚 Kaynaklar ve Veri Setleri",
+    }
     if "page" not in st.session_state:
         st.session_state["page"] = "home"
+    current_page = st.session_state["page"]
+
     with st.sidebar:
         st.markdown("## 🔎 Müsilaj Dedektifi")
-        st.radio("Bölümler", list(pages), format_func=pages.get, key="page")
-        st.divider()
-        st.markdown('<p class="small">NASA Space Apps Challenge 2026 · Sivas<br>'
-                    'Veri: NASA Giovanni — MODIS-Aqua (SST, Klorofil-a, FLH), MERRA-2 (rüzgâr), '
-                    '2003–2024 aylık.</p>', unsafe_allow_html=True)
+        st.write("")
+        for page_key, page_label in pages.items():
+            btn_type = "primary" if current_page == page_key else "secondary"
+            st.button(
+                page_label,
+                key=f"nav_{page_key}",
+                type=btn_type,
+                use_container_width=True,
+                on_click=go_to,
+                args=(page_key,),
+            )
 
-    page = st.session_state["page"]
-    if page == "home":
+    if current_page == "home":
         page_home(df)
-    elif page == "sim":
+    elif current_page == "sim":
         page_simulation(df)
-    else:
+    elif current_page == "stats":
         page_statistics(df)
+    else:
+        page_sources()
 
 
 main()
