@@ -1,9 +1,9 @@
 Title:,"Time Series, Area-Averaged of Chlorophyll a concentration (water only) monthly 4 km (monthly)"
 User Start Date:,2003-01-01T00:00:00Z
-User End Date:,2024-10-31T23:59:59Z
+User End Date:,2024-12-31T23:59:59Z
 User Bounding Box:,"26.9,40.2,30,41.1"
 Data Bounding Box:,"26.9375,40.2292,29.9792,41.0625"
-URL to Reproduce Results:,"https://giovanni.gsfc.nasa.gov/giovanni/#service=ArAvTs&starttime=2003-01-01T00:00:00Z&endtime=2024-10-31T23:59:59Z&bbox=26.9,40.2,30,41.1&data=MODISA_L3m_CHL_Mo_4km_R2022_0_chlor_a&portal=GIOVANNI&format=json"
+URL to Reproduce Results:,"https://giovanni.gsfc.nasa.gov/giovanni/#service=ArAvTs&starttime=2003-01-01T00:00:00Z&endtime=2024-12-31T23:59:59Z&bbox=26.9,40.2,30,41.1&data=MODISA_L3m_CHL_Mo_4km_R2022_0_chlor_a&dataKeyword=chlorophyll&portal=GIOVANNI&format=json"
 Fill Value (mean_MODISA_L3m_CHL_Mo_4km_R2022_0_chlor_a):, -32767
 
 time, mean_MODISA_L3m_CHL_Mo_4km_R2022_0_chlor_a
@@ -269,3 +269,5 @@ time, mean_MODISA_L3m_CHL_Mo_4km_R2022_0_chlor_a
 2024-08-01 00:00:00,2.80112147
 2024-09-01 00:00:00,2.95339561
 2024-10-01 00:00:00,3.40436411
+2024-11-01 00:00:00,5.43889761
+2024-12-01 00:00:00,16.1097832

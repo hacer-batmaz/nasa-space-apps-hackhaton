@@ -1,9 +1,9 @@
 Title:,"Time Series, Area-Averaged of Normalized Fluorescence Line Height (water only) monthly 4 km [MODIS-Aqua (monthly)"
 User Start Date:,2003-01-01T00:00:00Z
-User End Date:,2026-11-30T23:59:59Z
+User End Date:,2024-12-31T23:59:59Z
 User Bounding Box:,"26.9,40.2,30,41.1"
 Data Bounding Box:,"26.9375,40.2292,29.9792,41.0625"
-URL to Reproduce Results:,"https://giovanni.gsfc.nasa.gov/giovanni/#service=ArAvTs&starttime=2003-01-01T00:00:00Z&endtime=2026-11-30T23:59:59Z&bbox=26.9,40.2,30,41.1&data=MODISA_L3m_FLH_Mo_4km_R2022_0_nflh&dataKeyword=fluorescence&portal=GIOVANNI&format=json"
+URL to Reproduce Results:,"https://giovanni.gsfc.nasa.gov/giovanni/#service=ArAvTs&starttime=2003-01-01T00:00:00Z&endtime=2024-12-31T23:59:59Z&bbox=26.9,40.2,30,41.1&data=MODISA_L3m_FLH_Mo_4km_R2022_0_nflh&dataKeyword=fluorescence&portal=GIOVANNI&format=json"
 Fill Value (mean_MODISA_L3m_FLH_Mo_4km_R2022_0_nflh):, -32767
 
 time, mean_MODISA_L3m_FLH_Mo_4km_R2022_0_nflh
@@ -271,14 +271,3 @@ time, mean_MODISA_L3m_FLH_Mo_4km_R2022_0_nflh
 2024-10-01 00:00:00,0.124719545
 2024-11-01 00:00:00,0.222532257
 2024-12-01 00:00:00,0.246627823
-2025-01-01 00:00:00,0.237548605
-2025-02-01 00:00:00,0.224510074
-2025-03-01 00:00:00,0.109342985
-2025-04-01 00:00:00,0.114106506
-2025-05-01 00:00:00,0.11215546
-2025-06-01 00:00:00,0.0843536109
-2025-07-01 00:00:00,0.045946639
-2025-08-01 00:00:00,0.0675878897
-2025-09-01 00:00:00,0.089618817
-2025-10-01 00:00:00,0.108954556
-2025-11-01 00:00:00,0.116073295
