@@ -72,7 +72,7 @@ export default function Model() {
     <div className="page-container" style={{ paddingTop: "28px" }}>
       <div className="eyebrow mono">MAKİNE ÖĞRENMESİ PREDİKTÖRÜ</div>
       <h1 style={{ fontSize: "34px", fontWeight: 400, letterSpacing: "-1px", margin: "8px 0 4px" }}>
-        Yapay Zekâ Model Karşılaştırma &amp; Kriz Testi
+        Model Karşılaştırma &amp; Kriz Testi
       </h1>
       <p style={{ color: "#a1b0b4", fontSize: "13px", maxWidth: "850px", margin: "6px 0 0" }}>
         Modeller sıcaklık, rüzgâr, mevsim ve bir önceki ayın klorofil düzeyinden o ayın klorofil-a değerini tahmin

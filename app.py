@@ -43,17 +43,13 @@ MONTHS_TR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "
              "Ekim", "Kasım", "Aralık"]
 TREND_TR = {"increasing": "Artıyor ↑", "decreasing": "Azalıyor ↓", "no trend": "Belirgin trend yok →"}
 LEVEL_COLORS = {"Düşük": "#2e7d32", "Orta": "#f9a825", "Yüksek": "#ef6c00", "Kritik": "#6a1b9a"}
-# Basin boxes used for the Giovanni downloads (W, S, E, N)
 BASIN_BOXES = {
     "marmara":  (26.9, 40.2, 30.0, 41.1),
     "aegean":   (25.5, 36.8, 27.5, 39.8),
     "blacksea": (28.0, 41.0, 41.8, 42.5),
 }
 
-# Map points. 'susceptibility' (0–1) is an expert-judgement factor for how enclosed /
-# nutrient-loaded a location is; satellite values come from the basin averages.
 MAP_POINTS = [
-    # Sea of Marmara
     {"name": "İzmit Körfezi", "region": "marmara", "lat": 40.74, "lon": 29.62, "susceptibility": 1.00,
      "note": "Kapalı körfez; yoğun sanayi ve kentsel atık su yükü"},
     {"name": "İstanbul Boğazı (Marmara çıkışı)", "region": "marmara", "lat": 40.98, "lon": 28.98,
@@ -68,7 +64,6 @@ MAP_POINTS = [
      "note": "Adalar arası sığ ve korunaklı sular"},
     {"name": "Çanakkale Boğazı girişi", "region": "marmara", "lat": 40.42, "lon": 26.72, "susceptibility": 0.85,
      "note": "Marmara sularının Ege'ye çıkış kapısı"},
-    # Aegean Sea
     {"name": "Saros Körfezi", "region": "aegean", "lat": 40.55, "lon": 26.45, "susceptibility": 0.65,
      "note": "Boğaz çıkışına yakın, yarı kapalı körfez"},
     {"name": "Gökçeada açıkları", "region": "aegean", "lat": 40.15, "lon": 25.65, "susceptibility": 0.55,
@@ -79,7 +74,6 @@ MAP_POINTS = [
      "note": "Körfez içi; tarım ve turizm baskısı"},
     {"name": "İzmir açıkları", "region": "aegean", "lat": 38.55, "lon": 26.60, "susceptibility": 0.62,
      "note": "Büyükşehir ve Gediz etkisi"},
-    # Black Sea
     {"name": "İstanbul Boğazı (Karadeniz çıkışı)", "region": "blacksea", "lat": 41.30, "lon": 29.15,
      "susceptibility": 0.75, "note": "Boğaz ağzı; kıyısal karışım"},
     {"name": "Zonguldak açıkları", "region": "blacksea", "lat": 41.55, "lon": 31.75, "susceptibility": 0.65,
@@ -113,7 +107,6 @@ st.markdown(
       .timeline {border-left:3px solid #1565c0;padding-left:1rem;margin-left:.3rem;}
       .timeline p {margin:.2rem 0 .8rem 0;}
       .badge {display:inline-block;padding:.25rem .7rem;border-radius:999px;color:#fff;font-weight:600;}
-      .small {font-size:.86rem;color:#5f6b7a;}
       /* ---------- sidebar navigation (no boxes, divider lines only) ---------- */
       section[data-testid="stSidebar"] div[data-testid="stElementContainer"]:has(button[kind="primary"]),
       section[data-testid="stSidebar"] div[data-testid="stElementContainer"]:has(button[kind="secondary"]) {
@@ -200,7 +193,6 @@ def get_catalog() -> pd.DataFrame:
 
 
 def tr_num(value: float, digits: int = 2, sign: bool = False) -> str:
-    """Format a number with Turkish decimal comma."""
     if value is None or (isinstance(value, float) and np.isnan(value)):
         return "–"
     text = f"{value:+.{digits}f}" if sign else f"{value:.{digits}f}"
@@ -214,7 +206,6 @@ def tr_p(p: float) -> str:
 
 
 def p_text(p: float) -> str:
-    """'p < 0,001' or 'p = 0,024'."""
     if p is None or np.isnan(p):
         return "p = –"
     return "p < 0,001" if p < 0.001 else f"p = {tr_num(p, 3)}"
@@ -229,7 +220,6 @@ def change_label(variable: str, res: dict) -> str:
 
 
 def text_metric(container, label: str, value: str, note: str | None = None, color: str = "off") -> None:
-    """Metric whose delta is descriptive text (no arrow). Falls back on older Streamlit versions."""
     try:
         container.metric(label, value, note, delta_color=color, delta_arrow="off")
     except TypeError:
@@ -253,7 +243,6 @@ def page_home(df: pd.DataFrame) -> None:
         unsafe_allow_html=True,
     )
 
-    # Live headline numbers from the data
     sst_marmara = trend_test(get_series(df, "marmara", "sst"), False)
     chl_marmara = trend_test(get_series(df, "marmara", "chl"), True)
     chl_aegean = trend_test(get_series(df, "aegean", "chl"), True)
@@ -371,14 +360,12 @@ def month_label(ts: pd.Timestamp) -> str:
 
 
 def basin_susceptibility() -> dict:
-    """Mean susceptibility of the map points in each basin."""
     pts = pd.DataFrame(MAP_POINTS)
     return pts.groupby("region")["susceptibility"].mean().to_dict()
 
 
 @st.cache_data
 def monthly_risk(df: pd.DataFrame, d_sst: float, d_wind: int, d_chl: int) -> pd.DataFrame:
-    """Basin-average risk score for every month of real data, with the scenario deltas applied."""
     sus = basin_susceptibility()
     rows = []
     for _, r in df.dropna(subset=["sst", "wind", "chl"]).iterrows():
@@ -407,7 +394,6 @@ def build_points(base: dict, d_sst: float, d_wind: int, d_chl: int) -> pd.DataFr
 
 
 def risk_timeseries_chart(series: pd.DataFrame, selected: pd.Timestamp) -> go.Figure:
-    """Dark, compact chart for the side panel: 24-month window around the selected month."""
     start, end = selected - pd.DateOffset(months=12), selected + pd.DateOffset(months=11)
     window = series[(series["date"] >= start) & (series["date"] <= end)]
     fig = go.Figure()
@@ -441,14 +427,13 @@ def page_simulation(df: pd.DataFrame) -> None:
                        len(months) - 1)
     st.session_state.setdefault("month_idx", default_idx)
     st.session_state.setdefault("playing", False)
-    if "next_month_idx" in st.session_state:              # advance requested by the player
+    if "next_month_idx" in st.session_state:
         st.session_state["month_idx"] = st.session_state.pop("next_month_idx")
 
     header = st.empty()
     map_col, panel = st.columns([2.7, 1], gap="small")
 
     with panel.container(key="map_panel"):
-        # ---- player -----------------------------------------------------------------------
         play_col, slider_col = st.columns([1.25, 2])
         play_label = "⏸ Durdur" if st.session_state["playing"] else "▶ Oynat"
         if play_col.button(play_label, type="primary", use_container_width=True):
@@ -463,7 +448,6 @@ def page_simulation(df: pd.DataFrame) -> None:
         use_climatology = st.toggle("Tarihsel ortalamayı kullan (aynı takvim ayı)", value=False,
                                     help="Açıkken seçili yılın değil, tüm yıllardaki aynı ayın ortalaması kullanılır.")
 
-        # ---- layers -----------------------------------------------------------------------
         st.markdown('<p class="panel-h">Katmanlar</p>', unsafe_allow_html=True)
         base_map = st.radio("Altlık", list(BASE_MAPS), label_visibility="collapsed")
         show_points = st.checkbox("Müsilaj risk noktaları", value=True)
@@ -479,7 +463,6 @@ def page_simulation(df: pd.DataFrame) -> None:
                     unsafe_allow_html=True)
         focus = st.radio("Harita odağı", list(MAP_FOCUS), horizontal=True)
 
-    # ---- scenario bar under the map ---------------------------------------------------------
     map_slot = map_col.empty()
     note_slot = map_col.empty()
     with map_col.container(key="scenario_bar"):
@@ -490,7 +473,6 @@ def page_simulation(df: pd.DataFrame) -> None:
         d_wind = s2.slider("ΔRüzgâr (%)", -50, 50, 0, 5, help="Rüzgâr azaldıkça su karışmaz; durgunluk artar.")
         d_chl = s3.slider("ΔKlorofil-a / besin yükü (%)", -40, 150, 0, 5)
 
-    # ---- computation ------------------------------------------------------------------------
     mode = "climatology" if use_climatology else "event"
     base = {r: baseline_conditions(df, r, mode, month=selected.month, event_year=selected.year)
             for r in REGION_TR}
@@ -499,7 +481,6 @@ def page_simulation(df: pd.DataFrame) -> None:
     summary["delta"] = summary["score"] - summary["base"]
     series = monthly_risk(df, d_sst, d_wind, d_chl)
 
-    # ---- header -----------------------------------------------------------------------------
     date_text = f"{MONTHS_TR[selected.month - 1]} · tarihsel ort." if use_climatology else labels[idx]
     marmara_score = summary.loc["marmara", "score"]
     header.markdown(
@@ -520,7 +501,6 @@ def page_simulation(df: pd.DataFrame) -> None:
         unsafe_allow_html=True,
     )
 
-    # ---- map --------------------------------------------------------------------------------
     overlays = [k for k, on in (("chl", show_chl), ("sst", show_sst)) if on]
     center, zoom = MAP_FOCUS[focus]
     fig = risk_map(points, base_map, overlays, gibs_day, BASIN_BOXES, REGION_COLORS, REGION_TR,
@@ -530,7 +510,6 @@ def page_simulation(df: pd.DataFrame) -> None:
                        'noktalar arası fark yerel duyarlılık katsayısından gelir. Skor bir senaryo göstergesidir, '
                        'tahmin değildir.</div>', unsafe_allow_html=True)
 
-    # ---- panel (lower part) -----------------------------------------------------------------
     with panel.container(key="map_panel_lower"):
         st.markdown('<p class="panel-h">Risk skoru zaman serisi</p>', unsafe_allow_html=True)
         st.plotly_chart(risk_timeseries_chart(series, selected), use_container_width=True,
@@ -550,7 +529,6 @@ def page_simulation(df: pd.DataFrame) -> None:
             unsafe_allow_html=True,
         )
 
-    # ---- below the map ----------------------------------------------------------------------
     st.write("")
     k1, k2, k3 = st.columns(3)
     for col, region in zip((k1, k2, k3), ("marmara", "aegean", "blacksea")):
@@ -601,7 +579,6 @@ def page_simulation(df: pd.DataFrame) -> None:
                 'Klorofil/SST görüntüleri: NASA GIBS / EOSDIS · Altlık: © OpenStreetMap, © CARTO, Esri · '
                 'Eğitim amaçlı prototip.</div>', unsafe_allow_html=True)
 
-    # ---- player loop ------------------------------------------------------------------------
     if st.session_state["playing"]:
         time.sleep(PLAY_DELAY_SECONDS)
         st.session_state["next_month_idx"] = (idx + 1) % len(months)
@@ -609,7 +586,6 @@ def page_simulation(df: pd.DataFrame) -> None:
 
 
 def scenario_message(points: pd.DataFrame, summary: pd.DataFrame, d_sst: float, d_wind: int, d_chl: int) -> str:
-    """Build a dynamic, data-driven interpretation of the current scenario."""
     marmara = summary.loc["marmara"]
     parts = []
     changes = []
@@ -696,7 +672,6 @@ def page_statistics(df: pd.DataFrame) -> None:
     else:
         st.info(interpret_trend(region_choice, variable, res))
 
-    # Chart 1: raw series + Sen trend line
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=series.index, y=series.values, mode="lines", name="Aylık değer",
                              line={"color": REGION_COLORS[region_choice], "width": 1.3}))
@@ -712,7 +687,6 @@ def page_statistics(df: pd.DataFrame) -> None:
                       legend={"orientation": "h", "y": -0.15})
     st.plotly_chart(fig, use_container_width=True)
 
-    # Chart 2: anomaly bars
     display_anomaly, anomaly_unit = anomaly_for_display(series, variable)
     fig2 = go.Figure(go.Bar(x=display_anomaly.index, y=display_anomaly.values,
                             marker_color=np.where(display_anomaly.values >= 0, "#d32f2f", "#1976d2"),
@@ -724,7 +698,6 @@ def page_statistics(df: pd.DataFrame) -> None:
 
     info_boxes(variable)
 
-    # Extra test: Spearman rank correlation
     st.subheader("Ek istatistiksel test: Spearman sıra korelasyonu")
     st.markdown("Klorofil-a anomalisinin sıcaklık ve rüzgâr anomalileriyle ilişkisi (0–3 ay gecikme denenir).")
     corr_rows = []

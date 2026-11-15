@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { key: "home", label: "Keşfet" },
   { key: "sim", label: "Simülasyon" },
   { key: "stats", label: "İstatistik" },
-  { key: "model", label: "Yapay Zekâ Modeli" },
+  { key: "model", label: "Model Karşılaştırma" },
   { key: "sources", label: "Kaynaklar & Veri" },
 ];
 
