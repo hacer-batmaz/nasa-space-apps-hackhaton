@@ -72,11 +72,7 @@ export default function Model() {
     <div className="page-container" style={{ paddingTop: "28px" }}>
       <div className="eyebrow mono">MACHINE LEARNING PREDICTOR</div>
       <h1 style={{ fontSize: "34px", fontWeight: 400, letterSpacing: "-1px", margin: "8px 0 4px" }}>
-<<<<<<< HEAD
-        Model Karşılaştırma &amp; Kriz Testi
-=======
         AI Model Comparison &amp; Crisis Test
->>>>>>> 5216ad2 (sayfa ingilizceye cevrildi)
       </h1>
       <p style={{ color: "#a1b0b4", fontSize: "13px", maxWidth: "850px", margin: "6px 0 0" }}>
         Models estimate monthly chlorophyll-a from temperature, wind, season and the previous month’s chlorophyll. They are evaluated on unseen data from 2020–2024, including the 2021 mucilage crisis.
