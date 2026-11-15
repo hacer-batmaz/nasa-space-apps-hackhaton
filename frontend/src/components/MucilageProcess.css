@@ -1,0 +1,199 @@
+/* Mucilage formation diagram on the home page */
+.mp-wrap {
+  margin-top: 28px;
+  padding: 22px 24px;
+  background: #0d171c;
+  border: 1px solid #263941;
+  border-radius: 8px;
+}
+.mp-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 8px 0 16px;
+}
+.mp-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 22px;
+}
+.mp-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.mp-step {
+  position: relative;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 14px 16px;
+  background: #102027;
+  border: 1px solid #2b3f47;
+  border-radius: 6px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.mp-step:hover {
+  border-color: #46616a;
+}
+.mp-step.active {
+  border-color: var(--acid);
+  background: #15292f;
+}
+.mp-no {
+  color: var(--acid);
+}
+.mp-step-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+.mp-step-short {
+  font-size: 11.5px;
+  color: #a1b0b4;
+  line-height: 1.45;
+}
+.mp-arrow {
+  position: absolute;
+  right: -13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c818c;
+  font-size: 14px;
+  z-index: 1;
+}
+.mp-detail {
+  margin-top: 14px;
+  padding: 16px 18px;
+  border-left: 2px solid var(--acid);
+  background: var(--bg-card);
+}
+.mp-text {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #cfdbdc;
+}
+.mp-stages {
+  display: flex;
+  align-items: flex-end;
+  gap: 22px;
+  margin: 0 0 14px;
+  font-size: 11.5px;
+  color: #cfdbdc;
+}
+.mp-stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.mp-stage i {
+  display: inline-block;
+  border-radius: 40%;
+  background: #e8e1c8;
+}
+.mp-factors {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mp-factor {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #1d2e35;
+}
+.mp-factor-name {
+  color: var(--paper);
+}
+.mp-factor-data {
+  color: #9eafb6;
+}
+.mp-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.tag-sat {
+  background: var(--acid);
+  color: #111a12;
+}
+.tag-model {
+  background: #2d4651;
+  color: #cfe0e5;
+}
+.tag-none {
+  background: transparent;
+  color: #9ca8aa;
+  border: 1px solid #46595f;
+}
+.mp-composition {
+  background: #102027;
+  border: 1px solid #2b3f47;
+  border-radius: 6px;
+  padding: 16px;
+}
+.mp-composition h4 {
+  margin: 0 0 10px;
+  color: var(--acid);
+  font-size: 14px;
+}
+.mp-bar {
+  display: flex;
+  height: 14px;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.mp-composition ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.mp-composition li {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.mp-composition li i {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-top: 3px;
+}
+.mp-composition li b {
+  display: block;
+  color: var(--paper);
+  font-weight: 600;
+}
+.mp-composition li span {
+  color: #9eafb6;
+  font-size: 11.5px;
+}
+.mp-note {
+  margin: 12px 0 0;
+  font-size: 10.5px;
+  color: #6c818c;
+}
+@media (max-width: 900px) {
+  .mp-layout,
+  .mp-steps {
+    grid-template-columns: 1fr;
+  }
+  .mp-arrow {
+    display: none;
+  }
+  .mp-factor {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

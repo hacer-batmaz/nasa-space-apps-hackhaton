@@ -20,7 +20,6 @@ from analysis import (  # noqa: E402
     risk_level,
     risk_score,
     satellite_consistency,
-    spearman_anomaly_correlation,
     trend_line,
     trend_test,
 )
@@ -82,9 +81,20 @@ def clean_num(val: Any) -> float | None:
 def get_overview() -> dict:
     sst_m = trend_test(get_series(DF, "marmara", "sst"), False)
     chl_m = trend_test(get_series(DF, "marmara", "chl"), True)
+    wind_m = trend_test(get_series(DF, "marmara", "wind"), False)
     chl_a = trend_test(get_series(DF, "aegean", "chl"), True)
     years = DF["date"].dt.year
+    # 22-year trends of the three mucilage drivers for each sea (home-page strip)
+    regions = {}
+    for reg in ("marmara", "aegean", "blacksea"):
+        out = {}
+        for var, log_t in (("sst", False), ("wind", False), ("chl", True)):
+            res = trend_test(get_series(DF, reg, var), log_t)
+            out[f"{var}_change"] = clean_num(res["change_per_decade"])
+            out[f"{var}_p"] = clean_num(res["p_value"])
+        regions[reg] = out
     return {
+        "regions": regions,
         "min_year": int(years.min()),
         "max_year": int(years.max()),
         "total_months": int(DF["date"].nunique()),
@@ -92,6 +102,8 @@ def get_overview() -> dict:
         "marmara_sst_p": clean_num(sst_m["p_value"]),
         "marmara_chl_change": clean_num(chl_m["change_per_decade"]),
         "marmara_chl_p": clean_num(chl_m["p_value"]),
+        "marmara_wind_change": clean_num(wind_m["change_per_decade"]),
+        "marmara_wind_p": clean_num(wind_m["p_value"]),
         "aegean_chl_change": clean_num(chl_a["change_per_decade"]),
         "aegean_chl_p": clean_num(chl_a["p_value"]),
     }
@@ -234,7 +246,7 @@ def build_insights(year: int, month: int, climatology: bool, clim_start: int, cl
                 f"{tr_num((period['wind'] / full['wind'] - 1) * 100, 0, True)} %, klorofil "
                 f"{tr_num((period['chl'] / full['chl'] - 1) * 100, 0, True)} %.")})
     else:
-        out.append({"kind": "info", "text": f"Harita {month_name} {year} ayının gerçek uydu ölçümlerini gösteriyor."})
+        out.append({"kind": "info", "text": f"Harita {month_name} {year} ayının gerçek NASA verilerini gösteriyor."})
         actual = baseline_conditions(DF, "marmara", "event", month=month, event_year=year)
         normal = baseline_conditions(DF, "marmara", "climatology", month=month)
         a_score = basin_risk(actual, "marmara", 0, 0, 0)
@@ -270,7 +282,7 @@ def build_insights(year: int, month: int, climatology: bool, clim_start: int, cl
             text += " Marmara'daki artış " + " ve ".join(ratios) + "; kapalı yapısı nedeniyle daha hassas."
         out.append({"kind": "scenario", "text": text})
     else:
-        out.append({"kind": "scenario", "text": "Senaryo değişimleri sıfırda: skorlar doğrudan uydu verisinden "
+        out.append({"kind": "scenario", "text": "Senaryo değişimleri sıfırda: skorlar doğrudan NASA verisinden "
                                                 "hesaplanıyor (hiçbir koşul değiştirilmedi)."})
 
     # dominant driver
@@ -316,27 +328,6 @@ def get_statistics(
     )
     anom, anom_unit = anomaly_for_display(series, variable)
 
-    chl = get_series(DF, region, "chl", start_year, end_year)
-    correlations = []
-    for driver, label in (("sst", "SST → Klorofil"), ("wind", "Rüzgâr → Klorofil")):
-        d_ser = get_series(DF, region, driver, start_year, end_year)
-        same = spearman_anomaly_correlation(d_ser, False, chl, True, 0)
-        best = max(
-            (
-                {**spearman_anomaly_correlation(d_ser, False, chl, True, lag), "lag": lag}
-                for lag in range(4)
-            ),
-            key=lambda x: abs(x["rho"]) if not np.isnan(x["rho"]) else -1,
-        )
-        correlations.append({
-            "label": label,
-            "rho_same": clean_num(same["rho"]),
-            "p_same": clean_num(same["p_value"]),
-            "best_lag": best["lag"],
-            "rho_best": clean_num(best["rho"]),
-            "p_best": clean_num(best["p_value"]),
-        })
-
     comparison = []
     for reg in ("marmara", "aegean", "blacksea"):
         s = get_series(DF, reg, variable, start_year, end_year)
@@ -370,7 +361,6 @@ def get_statistics(
         "trend_values": [clean_num(v) for v in t_line.values] if not t_line.empty else [],
         "anomalies": [clean_num(v) for v in anom.values],
         "anomaly_unit": anom_unit,
-        "correlations": correlations,
         "comparison": comparison,
         "flh_check": flh_check,
     }

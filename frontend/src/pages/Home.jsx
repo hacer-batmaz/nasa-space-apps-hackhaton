@@ -1,6 +1,26 @@
 import { useEffect, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import Globe3D from "../components/Globe3D";
+import MucilageProcess from "../components/MucilageProcess";
+import { REFERENCES, SECONDARY } from "../data/references";
+
+// small "Kaynak" link shown after a sentence
+function Src({ refs }) {
+  return (
+    <span style={{ fontSize: "11px", color: "#6c818c", marginLeft: "6px", whiteSpace: "nowrap" }}>
+      [
+      {refs.map((r, i) => (
+        <span key={r.url}>
+          {i > 0 && "; "}
+          <a href={r.url} target="_blank" rel="noreferrer" style={{ color: "#9fb3a4" }}>
+            {r.short}
+          </a>
+        </span>
+      ))}
+      ]
+    </span>
+  );
+}
 
 const API = "http://127.0.0.1:8000/api";
 
@@ -9,7 +29,7 @@ const SEA_DETAILS = {
     name: "Marmara Denizi",
     coords: "40,65° N · 28,30° E",
     summary:
-      "Yarı kapalı yapısı, iki katmanlı akıntı sistemi ve yoğun kentsel-endüstriyel besin yükü nedeniyle ısınma ve rüzgâr zayıflamasına en hassas havza. 2007, 2008 ve 2021 müsilaj salgınlarının merkez üssü.",
+      "Yarı kapalı yapısı, iki katmanlı akıntı sistemi ve yoğun kentsel-endüstriyel besin yükü nedeniyle ısınma ve rüzgâr zayıflamasına en hassas havza. 2007–2008, 2020–2021 ve 2024 müsilaj olaylarının yaşandığı deniz.",
   },
   aegean: {
     name: "Ege Denizi (Türkiye Kıyısı)",
@@ -21,7 +41,7 @@ const SEA_DETAILS = {
     name: "Karadeniz (Türkiye Kıyısı)",
     coords: "42,00° N · 34,50° E",
     summary:
-      "Büyük nehir girdileri ve geniş kıta sahanlığı ile yüksek biyolojik üretkenliğe sahiptir. Boğaz çıkışı üzerinden Marmara yüzey suyunu besler.",
+      "Tuna gibi büyük nehirlerin getirdiği besinlerle biyolojik üretkenliği yüksektir. Az tuzlu yüzey suyu İstanbul Boğazı üzerinden Marmara'ya akarak Marmara'nın üst katmanını oluşturur.",
   },
 };
 
@@ -29,6 +49,14 @@ const trNum = (v, d = 2, sign = false) => {
   if (v === null || v === undefined || Number.isNaN(v)) return "–";
   const txt = sign && v > 0 ? `+${v.toFixed(d)}` : v.toFixed(d);
   return txt.replace(".", ",");
+};
+
+// "artıyor (anlamlı, p < 0,001)" or "belirgin bir eğilim yok"
+const trendNote = (change, p, up, down) => {
+  if (change === null || change === undefined || p === null || p === undefined) return "hesaplanıyor";
+  if (p >= 0.05) return "belirgin bir eğilim yok";
+  const pText = p < 0.001 ? "p < 0,001" : `p = ${p.toFixed(3).replace(".", ",")}`;
+  return `${change > 0 ? up : down} (anlamlı, ${pText})`;
 };
 
 export default function Home({ onNavigate }) {
@@ -43,6 +71,7 @@ export default function Home({ onNavigate }) {
   }, []);
 
   const seaInfo = SEA_DETAILS[selectedSea];
+  const trend = overview?.regions?.[selectedSea];
 
   return (
     <div className="page-container">
@@ -76,41 +105,8 @@ export default function Home({ onNavigate }) {
         <Globe3D region={selectedSea} />
       </div>
 
-      {/* Canlı Veri Şeridi */}
-      <div className="strip">
-        <div>
-          <div className="numeral">
-            22<small>yıl</small>
-          </div>
-          <p>
-            Kesintisiz aylık veri arşivi ({overview ? `${overview.min_year}–${overview.max_year}` : "2003–2024"})
-          </p>
-        </div>
-        <div>
-          <div className="numeral">
-            {overview ? trNum(overview.marmara_sst_change, 2, true) : "+0,83"}
-            <small>°C / 10 yıl</small>
-          </div>
-          <p>Marmara&apos;da deniz yüzeyi ısınma eğilimi</p>
-        </div>
-        <div>
-          <div className="numeral">
-            {overview ? trNum(overview.aegean_chl_change, 1, true) : "+13,1"}
-            <small>% / 10 yıl</small>
-          </div>
-          <p>Ege Denizi klorofil-a değişim oranı</p>
-        </div>
-        <div>
-          <div className="numeral">
-            {overview ? overview.total_months : 264}
-            <small>ay</small>
-          </div>
-          <p>Her deniz havzası için uydu gözlemi</p>
-        </div>
-      </div>
-
-      {/* Deniz Seçimi */}
-      <div className="sea-selection">
+      {/* Deniz Seçimi: seçim hem küreyi, hem veri şeridini, hem de açıklamayı değiştirir */}
+      <div className="sea-selection" style={{ marginTop: "28px" }}>
         <span className="mono" style={{ color: "#a1b0b4" }}>
           BİR DENİZ SEÇİN
         </span>
@@ -124,6 +120,42 @@ export default function Home({ onNavigate }) {
           <button className={selectedSea === "blacksea" ? "active" : ""} onClick={() => setSelectedSea("blacksea")}>
             Karadeniz ↗
           </button>
+        </div>
+      </div>
+
+      {/* Canlı Veri Şeridi: seçili denizin 22 yıllık eğilimi (Mann-Kendall + Sen eğimi) */}
+      <div className="mono" style={{ marginTop: "22px", color: "#8a9a9e" }}>
+        {seaInfo.name.toLocaleUpperCase("tr")} · 22 YILLIK EĞİLİM (
+        {overview ? `${overview.min_year}–${overview.max_year}` : "2003–2024"})
+      </div>
+      <div className="strip" style={{ marginTop: "12px", borderTop: 0, paddingTop: 0 }}>
+        <div>
+          <div className="numeral">
+            {overview ? overview.total_months : 264}
+            <small>ay</small>
+          </div>
+          <p>Kesintisiz aylık NASA verisi; yandaki eğilimler bu seriden hesaplandı</p>
+        </div>
+        <div>
+          <div className="numeral">
+            {trend ? trNum(trend.sst_change, 2, true) : "–"}
+            <small>°C / 10 yıl</small>
+          </div>
+          <p>Deniz yüzeyi sıcaklığı · {trendNote(trend?.sst_change, trend?.sst_p, "artıyor", "azalıyor")}</p>
+        </div>
+        <div>
+          <div className="numeral">
+            {trend ? (Math.abs(trend.wind_change) < 0.005 ? "≈ 0" : trNum(trend.wind_change, 2, true)) : "–"}
+            <small>m/s / 10 yıl</small>
+          </div>
+          <p>Yüzey rüzgâr hızı · {trendNote(trend?.wind_change, trend?.wind_p, "artıyor", "azalıyor")}</p>
+        </div>
+        <div>
+          <div className="numeral">
+            {trend ? trNum(trend.chl_change, 1, true) : "–"}
+            <small>% / 10 yıl</small>
+          </div>
+          <p>Yüzey klorofili · {trendNote(trend?.chl_change, trend?.chl_p, "artıyor", "azalıyor")}</p>
         </div>
       </div>
 
@@ -169,6 +201,9 @@ export default function Home({ onNavigate }) {
           </div>
         </div>
 
+        {/* Oluşum süreci diyagramı */}
+        <MucilageProcess />
+
         <div className="grid-2">
           <div>
             <div className="eyebrow mono">KRONOLOJİ</div>
@@ -177,15 +212,23 @@ export default function Home({ onNavigate }) {
             </h3>
             <div className="timeline-dark">
               <p>
-                <b>2007</b> — Marmara Denizi&apos;nde ilk kez geniş ölçekli müsilaj tabakaları raporlandı.
+                <b>1992</b> — Türkiye&apos;deki ilk müsilaj gözlemlerinin Erdek Körfezi&apos;nde yapıldığı aktarılır.
+                <Src refs={[SECONDARY.erdek1992]} />
               </p>
               <p>
-                <b>2008</b> — Marmara&apos;da yeniden yoğun kümeler görüldü; baskın tür{" "}
-                <i>Gonyaulax fragilis</i> idi.
+                <b>Ekim 2007 – Şubat 2008</b> — Marmara&apos;da, en yoğun olarak İzmit Körfezi&apos;nde geniş ölçekli
+                müsilaj. Baskın türlerden biri <i>Gonyaulax fragilis</i> idi.
+                <Src refs={[REFERENCES.tufekci2010]} />
               </p>
               <p>
-                <b>2021</b> — Erken ilkbaharda başlayıp Kuzey Ege ve Batı Karadeniz&apos;e yayılan{" "}
-                <b>tarihin en büyük salgını</b> yaşandı.
+                <b>Sonbahar 2020 – Yaz 2021</b> — Sonbahar 2020&apos;de Marmara genelinde başladı; Aralık 2020&apos;de
+                Çanakkale Boğazı&apos;nın derin sularında da görüldü. 2021 baharında yüzeyi kapladı, Çanakkale&apos;de
+                Mart–Temmuz arasında sürdü. Kayıtlardaki <b>en büyük salgın</b>.
+                <Src refs={[REFERENCES.topcu2021, REFERENCES.ozalp2021a, REFERENCES.ozalp2021b]} />
+              </p>
+              <p>
+                <b>Ekim 2024</b> — Erdek Körfezi&apos;nde yeniden müsilaj gözlendi.
+                <Src refs={[REFERENCES.sari2026]} />
               </p>
             </div>
           </div>
@@ -197,16 +240,16 @@ export default function Home({ onNavigate }) {
             </h3>
             <ul style={{ color: "#b5c5c8", fontSize: "12.5px", paddingLeft: "18px", lineHeight: 1.7 }}>
               <li>
-                <b>Marmara Denizi:</b> Yüzey ve dip ekosistemini kaplayarak balıkçılığı ve deniz turizmini
-                durma noktasına getirdi.
+                <b>Marmara Denizi:</b> Yüzeyi ve dibi kapladı; balıkçı ağlarını tıkayarak balıkçılığa ve
+                turizme ciddi zarar verdi. <Src refs={[REFERENCES.savun2021]} />
               </li>
               <li>
                 <b>Çanakkale Boğazı &amp; Kuzey Ege:</b> Mart–Temmuz arasında yaklaşık 5 ay sürdü; dip
-                canlılarında toplu ölümler gözlendi.
+                canlılarında toplu ölümler gözlendi. <Src refs={[REFERENCES.ozalp2021b]} />
               </li>
               <li>
-                <b>Batı Karadeniz:</b> İstanbul Boğazı çıkışında gözlemlendi ancak yoğunluğu Marmara&apos;nın
-                çok altında kaldı.
+                <b>Kuzey Ege:</b> Saros Körfezi, Gökçeada, Bozcaada ve Tavşan Adaları da müsilajdan
+                etkilendi. <Src refs={[REFERENCES.ozalp2021b]} />
               </li>
             </ul>
           </div>

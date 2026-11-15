@@ -290,11 +290,12 @@ export default function Simulation() {
             <input type="range" min={-40} max={150} step={5} value={scenario.d_chl}
               onChange={(e) => setScenarioValue("d_chl", Number(e.target.value))} />
             <button className="btn-outline reset-btn" disabled={!scenarioActive} onClick={() => setScenario(DEFAULT_SCENARIO)}>
-              <RotateCcw size={13} /> Gerçek veriye dön
+              <RotateCcw size={13} /> {climatology ? "Ortalama koşullara dön" : "Gerçek veriye dön"}
             </button>
             <p className="preset-note">
-              0 değeri &quot;müsilaj yok&quot; demek değildir; seçili ayın uydu ile ölçülen koşullarının hiç
-              değiştirilmediği anlamına gelir. Kaydırıcılar bu gerçek duruma göre farkı gösterir.
+              {climatology
+                ? `0 değeri "müsilaj yok" demek değildir; ${climRange[0]}–${climRange[1]} ortalama koşullarının hiç değiştirilmediği anlamına gelir. Kaydırıcılar bu ortalamaya göre farkı gösterir.`
+                : "0 değeri \"müsilaj yok\" demek değildir; seçili ayın uydu ile ölçülen koşullarının hiç değiştirilmediği anlamına gelir. Kaydırıcılar bu gerçek duruma göre farkı gösterir."}
             </p>
           </div>
 

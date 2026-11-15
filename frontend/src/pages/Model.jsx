@@ -11,13 +11,13 @@ const MODELS = [
 ];
 
 const FEATURE_LABELS = {
-  chl_log_lag1: "Önceki Ay Biyokütle Birikimi (CHL t-1)",
-  month_sin: "Mevsimsel Döngü (Sinüs)",
-  month_cos: "Mevsimsel Döngü (Kosinüs)",
-  sst: "Anlık Deniz Yüzeyi Sıcaklığı (SST)",
-  sst_lag1: "Önceki Ay Sıcaklık Etkisi (SST t-1)",
-  wind: "Anlık Yüzey Rüzgâr Hızı",
-  wind_lag1: "Önceki Ay Durgunluk Etkisi (Rüzgâr t-1)",
+  chl_log_lag1: "Önceki ayın klorofili",
+  month_sin: "Mevsim (yılın hangi ayı olduğu, sinüs)",
+  month_cos: "Mevsim (yılın hangi ayı olduğu, kosinüs)",
+  sst: "Aynı ayın deniz yüzeyi sıcaklığı",
+  sst_lag1: "Önceki ayın deniz yüzeyi sıcaklığı",
+  wind: "Aynı ayın rüzgâr hızı",
+  wind_lag1: "Önceki ayın rüzgâr hızı",
 };
 
 const trNum = (v, d = 2) => (v === null || v === undefined ? "–" : v.toFixed(d).replace(".", ","));
@@ -51,10 +51,13 @@ export default function Model() {
 
   const ready = mlReport && !mlReport.error;
   const total = ready ? mlReport.train_samples + mlReport.test_samples : 0;
+  // The split is by date (train until 2019, test 2020–2024), so it is the same for every algorithm
   const testPct = ready ? Math.round((mlReport.test_samples / total) * 100) : 0;
   const hasImportance = modelType !== "svr"; // SVR has no built-in feature importance
   const sortedImportances =
     ready && hasImportance ? Object.entries(mlReport.feature_importances).sort((a, b) => b[1] - a[1]) : [];
+  // bars are scaled to the most important variable so the longest bar is full width
+  const maxImportance = sortedImportances.length ? sortedImportances[0][1] || 1 : 1;
 
   const darkPlotLayout = {
     paper_bgcolor: "#0d171c",
@@ -121,11 +124,11 @@ export default function Model() {
           <div className="strip" style={{ marginTop: "10px" }}>
             <div>
               <div className="numeral" style={{ fontSize: "24px", color: "var(--acid)" }}>{mlReport.train_period}</div>
-              <p>Eğitim seti (%{100 - testPct})</p>
+              <p>Eğitim dönemi · {mlReport.train_samples} ay (%{100 - testPct})</p>
             </div>
             <div>
               <div className="numeral" style={{ fontSize: "24px", color: "#4fd1b5" }}>{mlReport.test_period}</div>
-              <p>Kör test seti (%{testPct})</p>
+              <p>Kör test dönemi · {mlReport.test_samples} ay (%{testPct})</p>
             </div>
             <div>
               <div className="numeral" style={{ fontSize: "24px", color: "var(--acid)" }}>{trNum(mlReport.r2_score)}</div>
@@ -199,11 +202,13 @@ export default function Model() {
 
           <div className="grid-2" style={{ marginTop: "20px" }}>
             <div className="dark-card">
-              <h4>Öznitelik Önem Dereceleri (Feature Importance)</h4>
+              <h4>Model hangi değişkenlere dayanıyor?</h4>
               {hasImportance ? (
                 <>
                   <p style={{ fontSize: "12px", color: "#9ca8aa", marginBottom: "14px" }}>
-                    Modelin klorofil sıçramalarını tahmin ederken hangi değişkenlere ağırlık verdiği:
+                    Her değişkenin, modelin klorofil tahmininde ne kadar kullanıldığı (öznitelik önemi). Toplam %100.
+                    Bu bir neden-sonuç ölçüsü değildir; birbirine benzeyen değişkenler (ör. bu ay ve önceki ayın
+                    sıcaklığı) önemi aralarında paylaşabilir.
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {sortedImportances.map(([feat, pct]) => (
@@ -215,7 +220,7 @@ export default function Model() {
                         <div style={{ width: "100%", height: "7px", background: "#16272e", borderRadius: "4px", overflow: "hidden" }}>
                           <div
                             style={{
-                              width: `${Math.min(pct * 1.4, 100)}%`,
+                              width: `${(pct / maxImportance) * 100}%`,
                               height: "100%",
                               background: "linear-gradient(90deg, #4fd1b5, #d8f77a)",
                             }}
@@ -244,7 +249,9 @@ export default function Model() {
                 <b>MAE:</b> Tahminin gerçek değerden ortalama kaç mg/m³ saptığıdır.
               </p>
               <p>
-                <b>Kör test:</b> Model 2020 sonrasını eğitimde hiç görmez. 2021 zirvesini yakalayıp
+                <b>Kör test:</b> Veri tarihe göre bölünür: model 2003–2019 ile eğitilir, 2020–2024&apos;ü hiç görmez.
+                Bütün algoritmalar aynı dönemle sınandığı için oran (%23) hepsinde aynıdır; bu, karşılaştırmanın adil
+                olmasını sağlar. 2021 zirvesini yakalayıp
                 yakalayamadığı, aşırı olayları tahmin etme gücünü gösterir.
               </p>
             </div>

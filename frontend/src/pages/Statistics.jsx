@@ -12,6 +12,16 @@ const VARS = {
 };
 const TREND_TR = { increasing: "Artıyor ↑", decreasing: "Azalıyor ↓", "no trend": "Belirgin trend yok →" };
 
+// Turkish number format (decimal comma); "–" for missing values
+const tr = (v, d) => (v === null || v === undefined ? "–" : v.toFixed(d).replace(".", ","));
+
+// Recorded mucilage events in the Sea of Marmara (see Kaynaklar page for the studies)
+const EVENT_PERIODS = [
+  { label: "2007–08 müsilajı", start: "2007-10-01", end: "2008-02-29" },
+  { label: "2020–21 müsilajı", start: "2020-10-01", end: "2021-07-31" },
+  { label: "2024 Erdek", start: "2024-10-01", end: "2024-10-31" },
+];
+
 
 export default function Statistics() {
   const [region, setRegion] = useState("marmara");
@@ -64,10 +74,10 @@ export default function Statistics() {
     stats.change_per_decade === null
       ? "–"
       : meta.isPct
-      ? `${stats.change_per_decade > 0 ? "+" : ""}${stats.change_per_decade.toFixed(1)}% / 10 yıl`
-      : `${stats.change_per_decade > 0 ? "+" : ""}${stats.change_per_decade.toFixed(2)} ${meta.unit} / 10 yıl`;
+      ? `${stats.change_per_decade > 0 ? "+" : ""}${tr(stats.change_per_decade, 1)}% / 10 yıl`
+      : `${stats.change_per_decade > 0 ? "+" : ""}${tr(stats.change_per_decade, 2)} ${meta.unit} / 10 yıl`;
 
-  const pTxt = stats.p_value === null ? "–" : stats.p_value < 0.001 ? "< 0,001" : stats.p_value.toFixed(3);
+  const pTxt = stats.p_value === null ? "–" : stats.p_value < 0.001 ? "< 0,001" : tr(stats.p_value, 3);
 
   const darkPlotLayout = {
     paper_bgcolor: "#0d171c",
@@ -77,6 +87,19 @@ export default function Statistics() {
     yaxis: { gridcolor: "rgba(255,255,255,0.06)" },
     margin: { t: 48, b: 40, l: 55, r: 20 },
   };
+
+  // purple bands for the recorded mucilage events inside the selected year range
+  const events = EVENT_PERIODS.filter(
+    (e) => Number(e.end.slice(0, 4)) >= startYear && Number(e.start.slice(0, 4)) <= endYear
+  );
+  const eventShapes = events.map((e) => ({
+    type: "rect", xref: "x", yref: "paper", x0: e.start, x1: e.end, y0: 0, y1: 1,
+    fillcolor: "rgba(176, 75, 214, 0.2)", line: { width: 0 }, layer: "below",
+  }));
+  const eventLabels = events.map((e) => ({
+    x: e.start, y: 1, xref: "x", yref: "paper", xanchor: "left", yanchor: "bottom",
+    text: e.label, showarrow: false, font: { size: 10, color: "#c99be0" },
+  }));
 
   return (
     <div className="page-container" style={{ paddingTop: "28px" }}>
@@ -135,8 +158,8 @@ export default function Statistics() {
         {stats.significant ? (
           <>
             <b>Bilimsel Yorum (p &lt; 0,05):</b> {REGIONS[region]} bölgesinde <b>{meta.name}</b> için
-            hesaplanan <b>{changeTxt}</b> değişimi istatistiksel olarak anlamlıdır; doğal dalgalanma veya
-            tesadüf olma ihtimali %5&apos;in altındadır.
+            hesaplanan <b>{changeTxt}</b> değişimi istatistiksel olarak anlamlıdır: gerçekte hiçbir eğilim
+            olmasaydı, bu kadar güçlü bir eğilimi yalnızca şans eseri görme olasılığı %5&apos;in altında olurdu.
           </>
         ) : (
           <>
@@ -158,6 +181,8 @@ export default function Statistics() {
             ...darkPlotLayout,
             title: { text: `Ham Zaman Serisi ve Sen Eğimi — ${meta.name}`, font: { size: 14 } },
             yaxis: { ...darkPlotLayout.yaxis, title: meta.unit, type: variable === "chl" ? "log" : "linear" },
+            shapes: eventShapes,
+            annotations: eventLabels,
             height: 360,
           }}
         />
@@ -188,38 +213,19 @@ export default function Statistics() {
             yaxis: { ...darkPlotLayout.yaxis, title: res.anomaly_unit, zeroline: true, zerolinecolor: "rgba(255,255,255,0.35)" },
             barmode: "relative",
             legend: { orientation: "h", y: -0.2 },
+            shapes: eventShapes,
+            annotations: eventLabels,
             height: 340,
           }}
         />
+        {events.length > 0 && (
+          <p style={{ fontSize: "11.5px", color: "#8a9a9e", margin: "6px 0 0" }}>
+            <span style={{ display: "inline-block", width: 12, height: 10, background: "rgba(176,75,214,0.45)", marginRight: 6, verticalAlign: -1 }} />
+            Mor bantlar, kayıtlı müsilaj olaylarının dönemleridir. İki grafikte de aynı şekilde işaretlidir.
+          </p>
+        )}
       </div>
 
-      <div className="panel-card dark-card" style={{ marginTop: "20px" }}>
-        <h4>Ek İstatistiksel Test: Spearman Sıra Korelasyonu (0–3 Ay Gecikmeli)</h4>
-        <table className="dark-table" style={{ marginTop: "10px" }}>
-          <thead>
-            <tr>
-              <th>İlişki</th>
-              <th>ρ (Aynı Ay)</th>
-              <th>p (Aynı Ay)</th>
-              <th>En Güçlü Gecikme</th>
-              <th>ρ (En Güçlü)</th>
-              <th>p (En Güçlü)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {res.correlations.map((c) => (
-              <tr key={c.label}>
-                <td><b>{c.label}</b></td>
-                <td>{c.rho_same?.toFixed(2)}</td>
-                <td>{c.p_same?.toFixed(3)}</td>
-                <td>{c.best_lag} ay</td>
-                <td style={{ color: "var(--acid)" }}>{c.rho_best?.toFixed(2)}</td>
-                <td>{c.p_best?.toFixed(3)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 }
