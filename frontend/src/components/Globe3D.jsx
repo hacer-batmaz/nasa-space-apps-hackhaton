@@ -5,8 +5,8 @@ import countries50m from "world-atlas/countries-50m.json";
 
 const SEA_COORDS = {
   marmara: { lon: 28.4, lat: 40.7, label: "40° N / 28° E · MARMARA" },
-  aegean: { lon: 25.8, lat: 38.6, label: "39° N / 26° E · EGE" },
-  blacksea: { lon: 34.5, lat: 42.0, label: "42° N / 35° E · KARADENİZ" },
+  aegean: { lon: 25.8, lat: 38.6, label: "39° N / 26° E · AEGEAN" },
+  blacksea: { lon: 34.5, lat: 42.0, label: "42° N / 35° E · BLACK SEA" },
 };
 
 // Real coastlines (Natural Earth 1:50m via world-atlas), converted once
@@ -76,7 +76,7 @@ export default function Globe3D({ region = "marmara" }) {
           filter: "drop-shadow(0 0 32px rgba(62, 140, 171, 0.18))",
         }}
         role="img"
-        aria-label="Türkiye merkezli dünya küresi ve seçili denizin konumu"
+        aria-label="Globe centered on Türkiye showing the selected sea"
       >
         <defs>
           <radialGradient id="oceanSphere" cx="42%" cy="38%" r="60%">

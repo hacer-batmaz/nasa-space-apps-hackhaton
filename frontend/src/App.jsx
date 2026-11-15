@@ -7,11 +7,11 @@ import Model from "./pages/Model";
 import Sources from "./pages/Sources";
 
 const NAV_ITEMS = [
-  { key: "home", label: "Keşfet" },
-  { key: "sim", label: "Simülasyon" },
-  { key: "stats", label: "İstatistik" },
-  { key: "model", label: "Model Karşılaştırma" },
-  { key: "sources", label: "Kaynaklar & Veri" },
+  { key: "home", label: "Explore" },
+  { key: "sim", label: "Simulation" },
+  { key: "stats", label: "Statistics" },
+  { key: "model", label: "Model comparison" },
+  { key: "sources", label: "Sources and data" },
 ];
 
 export default function App() {
@@ -23,14 +23,14 @@ export default function App() {
         <button className="wordmark" onClick={() => setPage("home")}>
           <Orbit size={26} color="#d8f77a" />
           <div>
-            MÜSİLAJ
+            MUCILAGE
             <br />
-            DEDEKTİFİ
+            DETECTIVE
             <small>EARTH OBSERVATORY</small>
           </div>
         </button>
 
-        <nav className="topnav" aria-label="Ana gezinme">
+        <nav className="topnav" aria-label="Main navigation">
           {NAV_ITEMS.map((item) => (
             <button
               key={item.key}

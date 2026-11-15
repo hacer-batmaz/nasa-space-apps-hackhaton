@@ -7,68 +7,68 @@ const STEPS = [
   {
     key: "ingredients",
     no: "01",
-    title: "Malzemeler",
-    short: "Besin + fitoplankton + sıcak, ışıklı su",
+    title: "Ingredients",
+    short: "Nutrients + phytoplankton + warm, sunlit water",
     text:
-      "Atık su, sanayi ve tarımdan gelen azot ve fosfor fitoplanktonu besler. Sıcak ve ışıklı su fitoplanktonun " +
-      "hızla çoğalmasını sağlar. Müsilajın hammaddesini bu mikroskobik algler üretir.",
+      "Nitrogen and phosphorus from wastewater, industry and agriculture feed phytoplankton. Warm, sunlit water supports " +
+      "rapid growth. These microscopic algae produce the raw material for mucilage.",
     factors: [
-      { name: "Deniz sıcaklığı", data: "MODIS uydusu", kind: "tracked" },
-      { name: "Fitoplankton miktarı", data: "MODIS uydusu", kind: "tracked" },
-      { name: "Besin yükü (azot, fosfor)", kind: "none" },
+      { name: "Sea temperature", data: "MODIS satellite", kind: "tracked" },
+      { name: "Phytoplankton biomass", data: "MODIS satellite", kind: "tracked" },
+      { name: "Nutrient load (nitrogen, phosphorus)", kind: "none" },
     ],
   },
   {
     key: "secretion",
     no: "02",
-    title: "Salgı",
-    short: "Stresteki hücreler yapışkan şeker salgılar",
+    title: "Secretion",
+    short: "Stressed cells release sticky sugars",
     text:
-      "Azot bol ama fosfor kıt olduğunda hücreler fotosentez yapmaya devam eder, fakat büyüyüp bölünemez. " +
-      "Fazla ürettikleri karbonu yapışkan şeker zincirleri (polisakkarit) olarak dışarı atarlar.",
+      "When nitrogen is abundant but phosphorus is scarce, cells continue photosynthesis but cannot grow and divide. " +
+      "They release excess carbon as sticky sugar chains (polysaccharides).",
     factors: [
-      { name: "Yüksek sıcaklık", data: "MODIS uydusu", kind: "tracked" },
-      { name: "Azot/fosfor dengesizliği", kind: "none" },
+      { name: "High temperature", data: "MODIS satellite", kind: "tracked" },
+      { name: "Nitrogen/phosphorus imbalance", kind: "none" },
     ],
   },
   {
     key: "accumulation",
     no: "03",
-    title: "Birikme",
-    short: "Durgun, tabakalı suda dağılmaz",
+    title: "Accumulation",
+    short: "Limited dispersal in calm, stratified water",
     text:
-      "Fosfor kıtlığında bakteriler de yavaşlar ve şekerleri parçalayamaz. Rüzgâr zayıfsa su karışmaz; Marmara'nın " +
-      "iki katmanlı yapısı da yüzey ile derin suyun karışmasını engeller. Salgılanan madde dağılmak yerine birikir.",
+      "Phosphorus scarcity also slows bacterial breakdown of sugars. Weak winds reduce mixing; Marmara’s " +
+      "two-layer structure further limits exchange between surface and deep water. Secretions accumulate instead of dispersing.",
     factors: [
-      { name: "Zayıf rüzgâr / durgun su", data: "MERRA-2", kind: "tracked" },
-      { name: "Tabakalaşma (iki katmanlı yapı)", kind: "none" },
+      { name: "Weak winds / calm water", data: "MERRA-2", kind: "tracked" },
+      { name: "Stratification (two-layer structure)", kind: "none" },
     ],
   },
   {
     key: "result",
     no: "04",
-    title: "Müsilaj",
-    short: "Deniz karı → bulut → tabaka",
+    title: "Mucilage",
+    short: "Marine snow → clouds → mats",
     text:
-      "Mikroskobik parçacıklar birbirine yapışarak önce “deniz karı” denen küçük kümeleri, sonra pamuksu bulutları, " +
-      "en sonunda yüzeyi veya dibi örten tabakaları oluşturur. Dibe çöken müsilaj oksijeni azaltır ve dip canlılarını boğar.",
+      "Microscopic particles stick together, forming small aggregates called “marine snow”, then fluffy clouds, " +
+      "and finally mats covering the surface or seabed. Sinking mucilage depletes oxygen and smothers benthic organisms.",
     factors: [],
-    stages: ["Deniz karı", "Bulut", "Tabaka"],
+    stages: ["Marine snow", "Clouds", "Mats"],
   },
 ];
 
 // tracked: this project follows the factor with NASA data; none: cannot be measured from space
 const KIND = {
-  tracked: { label: "NASA verisiyle izliyoruz", className: "tag-sat" },
-  none: { label: "Uydudan ölçülemiyor", className: "tag-none" },
+  tracked: { label: "Tracked with NASA data", className: "tag-sat" },
+  none: { label: "Not measured by satellite", className: "tag-none" },
 };
 
 const COMPOSITION = [
-  { name: "Su", note: "Kütlenin büyük kısmı; jel iskeletin içinde tutulur", weight: 6 },
-  { name: "Polisakkarit iskelet", note: "Fitoplankton ve bakterilerin salgıladığı yapışkan şeker zincirleri", weight: 2 },
-  { name: "Canlı ve ölü hücreler", note: "Diyatomeler, dinoflagellatlar (ör. Gonyaulax fragilis)", weight: 1 },
-  { name: "Bakteri ve virüsler", note: "Bazıları insan sağlığı açısından risklidir", weight: 1 },
-  { name: "Partiküller", note: "Organik döküntü, kil, mikroplastik", weight: 1 },
+  { name: "Water", note: "Most of the mass, held within the gel structure", weight: 6 },
+  { name: "Polysaccharide matrix", note: "Sticky sugar chains released by phytoplankton and bacteria", weight: 2 },
+  { name: "Living and dead cells", note: "Diatoms and dinoflagellates (e.g. Gonyaulax fragilis)", weight: 1 },
+  { name: "Bacteria and viruses", note: "Some can pose human health risks", weight: 1 },
+  { name: "Particles", note: "Organic debris, clay and microplastics", weight: 1 },
 ];
 const COMPOSITION_COLORS = ["#2d5566", "#d8f77a", "#5fc27e", "#b48cff", "#9ca8aa"];
 
@@ -78,8 +78,8 @@ export default function MucilageProcess() {
 
   return (
     <div className="mp-wrap">
-      <div className="eyebrow mono">OLUŞUM SÜRECİ</div>
-      <h3 className="mp-title">Müsilaj nasıl oluşur? Bir adıma tıklayın</h3>
+      <div className="eyebrow mono">FORMATION PROCESS</div>
+      <h3 className="mp-title">How does mucilage form? Select a step</h3>
 
       <div className="mp-layout">
         <div>
@@ -127,7 +127,7 @@ export default function MucilageProcess() {
         </div>
 
         <div className="mp-composition">
-          <h4>Müsilaj neyden oluşur?</h4>
+          <h4>What is mucilage made of?</h4>
           <div className="mp-bar" aria-hidden="true">
             {COMPOSITION.map((c, i) => (
               <div key={c.name} style={{ flex: c.weight, background: COMPOSITION_COLORS[i] }} />
@@ -144,7 +144,7 @@ export default function MucilageProcess() {
               </li>
             ))}
           </ul>
-          <p className="mp-note">Çubuktaki oranlar temsilîdir; ölçülmüş yüzdeler değildir.</p>
+          <p className="mp-note">Bar proportions are illustrative, not measured percentages.</p>
         </div>
       </div>
     </div>

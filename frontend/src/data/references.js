@@ -1,7 +1,7 @@
 // Literature used in the project. Every entry was checked against the journal page or DOI.
 export const REFERENCES = {
   tufekci2010: {
-    short: "Tüfekçi ve ark. (2010)",
+    short: "Tüfekçi et al. (2010)",
     authors: "Tüfekçi, Balkıs, Polat Beken, Ediger & Mantıkçı (2010)",
     title: "Phytoplankton composition and environmental conditions of a mucilage event in the Sea of Marmara",
     journal: "Turkish Journal of Biology, 34(2): 199–210",
@@ -70,7 +70,7 @@ export const REFERENCES = {
 // Secondary source (not a research article): only used for the 1992 Erdek record
 export const SECONDARY = {
   erdek1992: {
-    short: "Üsküdar Üniversitesi haberi",
+    short: "Üsküdar University news",
     url: "https://uskudar.edu.tr/en/icerik/44599/safari-pinned-tab.svg",
   },
 };

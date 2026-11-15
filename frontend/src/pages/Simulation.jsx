@@ -7,29 +7,29 @@ import "./Simulation.css";
 // same base address as the other pages (Home, Statistics, Sources)
 const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
-const MONTHS_TR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül",
-  "Ekim", "Kasım", "Aralık"];
+const MONTHS_TR = ["January", "February", "March", "April", "May", "June", "July", "August", "September",
+  "October", "November", "December"];
 const REGIONS = [
   { key: "marmara", label: "Marmara" },
-  { key: "aegean", label: "Ege" },
-  { key: "blacksea", label: "Karadeniz" },
+  { key: "aegean", label: "Aegean" },
+  { key: "blacksea", label: "Black Sea" },
 ];
 const REGION_COLORS = { marmara: "#d8f77a", aegean: "#6fb7e0", blacksea: "#9ca8aa" };
 const SPEEDS = [
-  { label: "0,5×", ms: 1800 },
+  { label: "0.5×", ms: 1800 },
   { label: "1×", ms: 1000 },
   { label: "2×", ms: 500 },
   { label: "4×", ms: 220 },
 ];
 const STEPS = [
-  { label: "Aylık", months: 1 },
-  { label: "Mevsimlik", months: 3 },
-  { label: "Yıllık", months: 12 },
+  { label: "Monthly", months: 1 },
+  { label: "Seasonal", months: 3 },
+  { label: "Annual", months: 12 },
 ];
 const DRIVERS = [
-  { key: "thermal", label: "Sıcaklık", color: "#ff6b5b" },
-  { key: "calm", label: "Durgunluk", color: "#b48cff" },
-  { key: "biomass", label: "Klorofil / besin", color: "#5fc27e" },
+  { key: "thermal", label: "Temperature", color: "#ff6b5b" },
+  { key: "calm", label: "Calm water", color: "#b48cff" },
+  { key: "biomass", label: "Chlorophyll / nutrients", color: "#5fc27e" },
 ];
 const INSIGHT_ICONS = { info: "◎", compare: "⇄", scenario: "◐", driver: "➤", rank: "▤", alert: "▲", ok: "✓" };
 // 0 = no change: the month's measured satellite conditions
@@ -37,9 +37,9 @@ const DEFAULT_SCENARIO = { d_sst: 0, d_wind: 0, d_chl: 0 };
 const YEAR_MIN = 2003;
 const YEAR_MAX = 2024;
 const METRICS = [
-  { key: "score", label: "Risk skoru" },
-  { key: "sst", label: "Sıcaklık" },
-  { key: "wind", label: "Rüzgâr" },
+  { key: "score", label: "Risk score" },
+  { key: "sst", label: "Temperature" },
+  { key: "wind", label: "Wind" },
   { key: "chl", label: "CHL" },
 ];
 
@@ -51,7 +51,7 @@ function monthLabel(ym) {
 
 function fmt(v, digits = 0, sign = false) {
   if (v === null || v === undefined || Number.isNaN(v)) return "–";
-  const s = Number(v).toFixed(digits).replace(".", ",");
+  const s = Number(v).toFixed(digits);
   return sign && v > 0 ? `+${s}` : s;
 }
 
@@ -62,7 +62,7 @@ export default function Simulation() {
   const [climatology, setClimatology] = useState(false);
   const [climRange, setClimRange] = useState([YEAR_MIN, YEAR_MAX]);
   const [region, setRegion] = useState("marmara");
-  const [selectedPoint, setSelectedPoint] = useState("İzmit Körfezi");
+  const [selectedPoint, setSelectedPoint] = useState("İzmit Bay");
   const [activeMetric, setActiveMetric] = useState("score");
   const [baseLayer, setBaseLayer] = useState("light");
   const [showBoxes, setShowBoxes] = useState(true);
@@ -116,7 +116,7 @@ export default function Simulation() {
           setError(null);
         })
         .catch((e) => {
-          if (e.name !== "AbortError") setError("Simülasyon verisi alınamadı.");
+          if (e.name !== "AbortError") setError("Unable to load simulation data.");
         });
     }, playing ? 0 : 150);
     return () => {
@@ -146,15 +146,15 @@ export default function Simulation() {
 
   const reading = (() => {
     if (!currentPt) return { val: "–", unit: "" };
-    if (activeMetric === "sst") return { val: fmt(currentPt.sst, 1), unit: "°C · deniz yüzeyi sıcaklığı" };
-    if (activeMetric === "wind") return { val: fmt(currentPt.wind, 1), unit: "m/s · yüzey rüzgâr hızı" };
-    if (activeMetric === "chl") return { val: fmt(currentPt.chl, 2), unit: "mg/m³ · klorofil-a" };
+    if (activeMetric === "sst") return { val: fmt(currentPt.sst, 1), unit: "°C · sea surface temperature" };
+    if (activeMetric === "wind") return { val: fmt(currentPt.wind, 1), unit: "m/s · surface wind speed" };
+    if (activeMetric === "chl") return { val: fmt(currentPt.chl, 2), unit: "mg/m³ · chlorophyll-a" };
     return { val: fmt(currentPt.score), unit: `/100 · ${currentPt.level} risk` };
   })();
   const pointDelta = currentPt ? currentPt.score - currentPt.base_score : 0;
   const scenarioActive = scenario.d_sst !== 0 || scenario.d_wind !== 0 || scenario.d_chl !== 0;
   const periodLabel = climatology
-    ? `${MONTHS_TR[currentMonth - 1]} · ${climRange[0]}–${climRange[1]} ortalaması`
+    ? `${MONTHS_TR[currentMonth - 1]} · ${climRange[0]}–${climRange[1]} average`
     : monthLabel(current);
   const setClimYear = (which, value) =>
     setClimRange(([a, b]) => (which === 0 ? [Math.min(value, b), b] : [a, Math.max(value, a)]));
@@ -181,7 +181,7 @@ export default function Simulation() {
         y: [data.series.marmara[selIndex]],
         type: "scatter",
         mode: "markers",
-        name: "Seçili ay",
+        name: "Selected month",
         marker: { size: 15, color: "#0b151b", line: { color: "#d8f77a", width: 3 } },
         hoverinfo: "skip",
       });
@@ -194,7 +194,7 @@ export default function Simulation() {
         paper_bgcolor: "rgba(0,0,0,0)",
         plot_bgcolor: "rgba(0,0,0,0)",
         font: { color: "#a9b8bb", size: 11 },
-        yaxis: { range: [0, 100], gridcolor: "rgba(255,255,255,0.07)", title: "Risk skoru" },
+        yaxis: { range: [0, 100], gridcolor: "rgba(255,255,255,0.07)", title: "Risk score" },
         xaxis: isClim
           ? { gridcolor: "rgba(255,255,255,0.04)", type: "category" }
           : { gridcolor: "rgba(255,255,255,0.04)", tickformat: "%m.%Y" },
@@ -213,11 +213,10 @@ export default function Simulation() {
   return (
     <div className="page-container">
       <div className="sim-head">
-        <span className="mono eyebrow">Simülasyon · Müsilaj risk atlası</span>
-        <h1>Türk denizlerinde müsilaj riski</h1>
+        <span className="mono eyebrow">Simulation · Mucilage Risk Atlas</span>
+        <h1>Mucilage risk in Türkiye’s seas</h1>
         <p>
-          Gerçek NASA uydu verisinden (MODIS-Aqua, MERRA-2) bir ay seçin ya da zamanı oynatın; senaryo
-          kaydırıcılarıyla sıcaklık, rüzgâr ve besin koşullarını değiştirin.
+          Select a month from NASA data (MODIS Aqua, MERRA-2) or play the timeline. Adjust temperature, wind and nutrient conditions with the scenario sliders.
         </p>
       </div>
 
@@ -237,12 +236,12 @@ export default function Simulation() {
           {/* ---- left panel: selected coastal point (click a point on the map) ------------- */}
           <div className="floating-panel">
             <span className="mono eyebrow">
-              Bölgesel gözlem · {periodLabel}
+              Regional observation · {periodLabel}
             </span>
             <h2>{currentPt?.name || "–"}</h2>
             {currentPt && (
               <p className="point-coords">
-                {fmt(currentPt.lat, 2)}° K · {fmt(currentPt.lon, 2)}° D
+                {fmt(currentPt.lat, 2)}° N · {fmt(currentPt.lon, 2)}° E
               </p>
             )}
             <div className="switches">
@@ -258,20 +257,20 @@ export default function Simulation() {
             <div className="reading-sub">{reading.unit}</div>
             {currentPt && Math.abs(pointDelta) >= 0.1 && (
               <div className={pointDelta > 0 ? "delta up" : "delta down"} style={{ fontSize: 12, marginTop: 6 }}>
-                {fmt(pointDelta, 1, true)} puan senaryo etkisi (baz {fmt(currentPt.base_score)})
+                {fmt(pointDelta, 1, true)} points scenario effect (baseline {fmt(currentPt.base_score)})
               </div>
             )}
             {currentPt?.note && <p className="point-note">{currentPt.note}</p>}
-            <p className="point-hint mono">Başka bir noktayı seçmek için haritada tıklayın</p>
+            <p className="point-hint mono">Click the map to select another location</p>
           </div>
 
           {/* ---- right panel: scenario ------------------------------------------------------ */}
           <div className="sim-sliders-panel">
             <div className="panel-head">
-              <span className="mono eyebrow">Senaryo simülasyonu</span>
+              <span className="mono eyebrow">Scenario simulation</span>
               <button className="btn-outline zoom-btn" onClick={() => setFocus(focus === "turkey" ? "marmara" : "turkey")}>
                 {focus === "turkey" ? <ZoomIn size={13} /> : <ZoomOut size={13} />}
-                <span>{focus === "turkey" ? "Marmara" : "Tüm Türkiye"}</span>
+                <span>{focus === "turkey" ? "Marmara" : "All Türkiye"}</span>
               </button>
             </div>
             <label>
@@ -280,22 +279,22 @@ export default function Simulation() {
             <input type="range" min={-2} max={4} step={0.1} value={scenario.d_sst}
               onChange={(e) => setScenarioValue("d_sst", Number(e.target.value))} />
             <label>
-              ΔRüzgâr <b>{fmt(scenario.d_wind, 0, true)} %</b>
+              ΔWind <b>{fmt(scenario.d_wind, 0, true)} %</b>
             </label>
             <input type="range" min={-50} max={50} step={5} value={scenario.d_wind}
               onChange={(e) => setScenarioValue("d_wind", Number(e.target.value))} />
             <label>
-              ΔKlorofil / besin <b>{fmt(scenario.d_chl, 0, true)} %</b>
+              ΔChlorophyll / nutrients <b>{fmt(scenario.d_chl, 0, true)} %</b>
             </label>
             <input type="range" min={-40} max={150} step={5} value={scenario.d_chl}
               onChange={(e) => setScenarioValue("d_chl", Number(e.target.value))} />
             <button className="btn-outline reset-btn" disabled={!scenarioActive} onClick={() => setScenario(DEFAULT_SCENARIO)}>
-              <RotateCcw size={13} /> {climatology ? "Ortalama koşullara dön" : "Gerçek veriye dön"}
+              <RotateCcw size={13} /> {climatology ? "Reset to average conditions" : "Reset to observations"}
             </button>
             <p className="preset-note">
               {climatology
-                ? `0 değeri "müsilaj yok" demek değildir; ${climRange[0]}–${climRange[1]} ortalama koşullarının hiç değiştirilmediği anlamına gelir. Kaydırıcılar bu ortalamaya göre farkı gösterir.`
-                : "0 değeri \"müsilaj yok\" demek değildir; seçili ayın uydu ile ölçülen koşullarının hiç değiştirilmediği anlamına gelir. Kaydırıcılar bu gerçek duruma göre farkı gösterir."}
+                ? `Zero does not mean "no mucilage"; it means the average conditions for ${climRange[0]}–${climRange[1]} are unchanged. Sliders show changes relative to this average.`
+                : "Zero does not mean \"no mucilage\"; it means the selected month’s observed conditions are unchanged. Sliders show changes relative to those observations."}
             </p>
           </div>
 
@@ -303,10 +302,10 @@ export default function Simulation() {
           <div className="map-tools">
             <div className="risk-legend">
               {[
-                ["Düşük", 10],
-                ["Orta", 30],
-                ["Yüksek", 60],
-                ["Kritik", 80],
+                ["Low", 10],
+                ["Moderate", 30],
+                ["High", 60],
+                ["Critical", 80],
               ].map(([label, v]) => (
                 <span key={label}>
                   <i style={{ background: riskColor(v) }} />
@@ -316,8 +315,8 @@ export default function Simulation() {
             </div>
             <div className="layer-tools">
               {[
-                ["satellite", "Uydu"],
-                ["light", "Açık"],
+                ["satellite", "Satellite"],
+                ["light", "Light"],
               ].map(([key, label]) => (
                 <button key={key} className={baseLayer === key ? "chip active" : "chip"} onClick={() => setBaseLayer(key)}>
                   {label}
@@ -325,7 +324,7 @@ export default function Simulation() {
               ))}
               <label className="check-row inline">
                 <input type="checkbox" checked={showBoxes} onChange={(e) => setShowBoxes(e.target.checked)} />
-                Veri kutuları
+                Data bounds
               </label>
             </div>
           </div>
@@ -334,14 +333,14 @@ export default function Simulation() {
         {/* ---- time bar ------------------------------------------------------------------------ */}
         <div className="timebar">
           <div className="player">
-            <button className="icon-btn" onClick={() => move(-stepMonths)} aria-label="Geri">
+            <button className="icon-btn" onClick={() => move(-stepMonths)} aria-label="Previous">
               <SkipBack size={14} />
             </button>
             <button className="btn-acid play-btn" onClick={() => setPlaying((p) => !p)} disabled={!months.length}>
               {playing ? <Pause size={14} /> : <Play size={14} />}
-              {playing ? "Durdur" : "Oynat"}
+              {playing ? "Pause" : "Play"}
             </button>
-            <button className="icon-btn" onClick={() => move(stepMonths)} aria-label="İleri">
+            <button className="icon-btn" onClick={() => move(stepMonths)} aria-label="Next">
               <SkipForward size={14} />
             </button>
           </div>
@@ -350,9 +349,9 @@ export default function Simulation() {
             {climatology ? (
               <>
                 <div className="time-labels">
-                  <span className="mono">Ocak</span>
+                  <span className="mono">January</span>
                   <span className="time-current">{periodLabel}</span>
-                  <span className="mono">Aralık</span>
+                  <span className="mono">December</span>
                 </div>
                 {/* long-term normal: only the calendar month matters */}
                 <input type="range" min={1} max={12} value={currentMonth}
@@ -372,7 +371,7 @@ export default function Simulation() {
           </div>
 
           <div className="player-options">
-            <label className="mono">Hız</label>
+            <label className="mono">Speed</label>
             <div className="chip-row">
               {SPEEDS.map((s, i) => (
                 <button key={s.label} className={speed === i ? "chip active" : "chip"} onClick={() => setSpeed(i)}>
@@ -380,11 +379,11 @@ export default function Simulation() {
                 </button>
               ))}
             </div>
-            <label className="mono">Adım</label>
+            <label className="mono">Step</label>
             <div className="chip-row">
               {STEPS.map((s, i) => (
                 <button key={s.label} className={step === i ? "chip active" : "chip"} onClick={() => setStep(i)}
-                  disabled={climatology && i > 0} title={climatology && i > 0 ? "Tarihsel ortalamada ay ay ilerler" : undefined}>
+                  disabled={climatology && i > 0} title={climatology && i > 0 ? "Historical averages advance one month at a time" : undefined}>
                   {s.label}
                 </button>
               ))}
@@ -395,19 +394,19 @@ export default function Simulation() {
         {/* ---- comparison baseline: real month vs long-term normal --------------------------- */}
         <div className="baseline-bar">
           <div className="baseline-switch">
-            <span className="mono">Veri tabanı</span>
+            <span className="mono">Baseline</span>
             <div className="segmented">
               <button className={!climatology ? "active" : ""} onClick={() => setClimatology(false)}>
-                Gerçek ay verisi
+                Monthly observations
               </button>
               <button className={climatology ? "active" : ""} onClick={() => setClimatology(true)}>
-                Tarihsel ortalama
+                Historical average
               </button>
             </div>
           </div>
           {climatology && (
             <div className="baseline-range">
-              <span className="mono">Ortalama alınan yıllar</span>
+              <span className="mono">Averaging period</span>
               <select value={climRange[0]} onChange={(e) => setClimYear(0, Number(e.target.value))}>
                 {Array.from({ length: YEAR_MAX - YEAR_MIN + 1 }, (_, i) => YEAR_MIN + i).map((y) => (
                   <option key={y} value={y}>{y}</option>
@@ -421,9 +420,9 @@ export default function Simulation() {
               </select>
               <div className="chip-row">
                 {[
-                  ["Tümü", YEAR_MIN, YEAR_MAX],
-                  ["İlk 10 yıl", 2003, 2012],
-                  ["Son 10 yıl", 2015, 2024],
+                  ["All years", YEAR_MIN, YEAR_MAX],
+                  ["First 10 years", 2003, 2012],
+                  ["Last 10 years", 2015, 2024],
                 ].map(([label, a, b]) => (
                   <button key={label} className={climRange[0] === a && climRange[1] === b ? "chip active" : "chip"}
                     onClick={() => setClimRange([a, b])}>
@@ -435,8 +434,8 @@ export default function Simulation() {
           )}
           <p className="baseline-note">
             {climatology
-              ? `Seçili ayın tek bir yılı yerine ${climRange[0]}–${climRange[1]} arasındaki ${climRange[1] - climRange[0] + 1} yılın aynı ayının ortalaması kullanılır: "normal bir ${MONTHS_TR[currentMonth - 1]}". Yıl aralığını değiştirerek örneğin ilk 10 yılın normalini son 10 yılınkiyle karşılaştırabilirsiniz.`
-              : "Haritada seçili ayın gerçek uydu ölçümleri gösterilir. \"Tarihsel ortalama\"yı seçerseniz tek bir yıl yerine seçtiğiniz yıl aralığındaki aynı ayın ortalaması kullanılır."}
+              ? `Uses the same calendar month averaged over ${climRange[1] - climRange[0] + 1} years (${climRange[0]}–${climRange[1]}): "a typical ${MONTHS_TR[currentMonth - 1]}". Change the period to compare, for example, the first and last ten years.`
+              : "The map shows observations for the selected month. Choose \"Historical average\" to use the same calendar month averaged over the selected years."}
           </p>
         </div>
       </div>
@@ -444,15 +443,15 @@ export default function Simulation() {
       {/* ---- simulation analysis (prominent) --------------------------------------------------- */}
       <section className="sim-analysis">
         <div className="sim-analysis-head">
-          <span className="mono eyebrow">Simülasyon analizi</span>
+          <span className="mono eyebrow">Simulation analysis</span>
           <h2>
-            {periodLabel} {scenarioActive ? "· senaryo uygulanmış" : "· gerçek koşullar"}
+            {periodLabel} {scenarioActive ? "· scenario applied" : "· observed conditions"}
           </h2>
         </div>
 
         {data && !data.summary && (
           <div className="sim-error" style={{ marginBottom: 16 }}>
-            Analiz verisi gelmedi: arka uçta eski api.py çalışıyor. Yeni api.py dosyasını koyup uvicorn'u yeniden başlatın.
+            Analysis unavailable: the server is running an older api.py. Update the file and restart uvicorn.
           </div>
         )}
         <div className="basin-cards">
@@ -473,15 +472,15 @@ export default function Simulation() {
                 </div>
                 <div className="basin-delta">
                   {s && Math.abs(s.delta) >= 0.1 ? (
-                    <span className={s.delta > 0 ? "delta up" : "delta down"}>{fmt(s.delta, 1, true)} puan senaryo etkisi</span>
+                    <span className={s.delta > 0 ? "delta up" : "delta down"}>{fmt(s.delta, 1, true)} points scenario effect</span>
                   ) : (
-                    <span className="delta flat">Senaryo etkisi yok</span>
+                    <span className="delta flat">No scenario effect</span>
                   )}
                 </div>
-                <div className="driver-bar" title="Skorun etkenlere göre dağılımı">
+                <div className="driver-bar" title="Score contribution by driver">
                   {DRIVERS.map((d) => (
                     <div key={d.key} style={{ width: `${s?.drivers?.[d.key] || 0}%`, background: d.color }}>
-                      {(s?.drivers?.[d.key] || 0) >= 14 ? `%${fmt(s.drivers[d.key])}` : ""}
+                      {(s?.drivers?.[d.key] || 0) >= 14 ? `${fmt(s.drivers[d.key])}%` : ""}
                     </div>
                   ))}
                 </div>
@@ -500,7 +499,7 @@ export default function Simulation() {
 
         <div className="analysis-grid">
           <div className="insight-panel">
-            <h3>Yorum</h3>
+            <h3>Interpretation</h3>
             <ul className="insight-list">
               {(data?.insights || []).map((ins, i) => (
                 <li key={i} className={`insight ${ins.kind}`}>
@@ -511,15 +510,14 @@ export default function Simulation() {
             </ul>
           </div>
           <div className="curve-panel">
-            <h3>Aylık risk eğrisi</h3>
-            <p className="curve-note">{climatology ? `${climRange[0]}–${climRange[1]} ortalamasıyla 12 takvim ayı` : "Seçili ayın 12 ay öncesi ve sonrası"}, senaryo uygulanmış hâliyle. Mor bant kritik bölge (75+).</p>
+            <h3>Monthly risk curve</h3>
+            <p className="curve-note">{climatology ? `${climRange[0]}–${climRange[1]} average across 12 calendar months` : "12 months before and after the selected month"}, with the scenario applied. The purple band marks the critical range (75+).</p>
             {curve && <PlotChart data={curve.data} layout={curve.layout} config={curve.config} />}
           </div>
         </div>
 
         <p className="method-note">
-          <b>Nasıl hesaplanıyor?</b> Sıcaklık (%35), durgunluk (%25) ve klorofil (%40) etkenleri 0–1 arasına ölçeklenip
-          konumun yerel duyarlılığıyla çarpılır. Bu skor senaryo tabanlı bir göstergedir; doğrulanmış bir tahmin modeli değildir.
+          <b>How is it calculated?</b> Temperature (35%), calm water (25%) and chlorophyll (40%) components are scaled to 0–1 and multiplied by local susceptibility. This is a scenario-based indicator, not a validated forecast model.
         </p>
       </section>
     </div>

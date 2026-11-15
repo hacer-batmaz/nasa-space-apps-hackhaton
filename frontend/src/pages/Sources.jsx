@@ -14,22 +14,22 @@ export default function Sources() {
 
   return (
     <div className="page-container" style={{ paddingTop: "28px" }}>
-      <div className="eyebrow mono">AÇIK BİLİM VE TEKRAR ÜRETİLEBİLİRLİK</div>
+      <div className="eyebrow mono">OPEN SCIENCE AND REPRODUCIBILITY</div>
       <h1 style={{ fontSize: "34px", fontWeight: 400, letterSpacing: "-1px", margin: "8px 0 12px" }}>
-        Kaynaklar ve NASA Veri Setleri
+        References and NASA Datasets
       </h1>
 
       <div className="dark-card" style={{ overflowX: "auto" }}>
-        <h4>1. Kullanılan NASA Giovanni Veri Setleri</h4>
+        <h4>1. NASA Giovanni Datasets Used</h4>
         <table className="dark-table" style={{ marginTop: "10px" }}>
           <thead>
             <tr>
-              <th>Dosya Adı</th>
-              <th>Değişken</th>
-              <th>Bölge</th>
-              <th>Kaynak</th>
-              <th>Birim</th>
-              <th>Aralık</th>
+              <th>File Name</th>
+              <th>Variable</th>
+              <th>Region</th>
+              <th>Source</th>
+              <th>Unit</th>
+              <th>Period</th>
               <th>Giovanni</th>
             </tr>
           </thead>
@@ -45,7 +45,7 @@ export default function Sources() {
                 <td>
                   {row.giovanni_url && (
                     <a href={row.giovanni_url} target="_blank" rel="noreferrer" style={{ color: "var(--acid)" }}>
-                      Doğrula ↗
+                      Verify ↗
                     </a>
                   )}
                 </td>
@@ -56,7 +56,7 @@ export default function Sources() {
       </div>
 
       <div className="dark-card" style={{ marginTop: "16px" }}>
-        <h4>2. Bilimsel Literatür</h4>
+        <h4>2. Scientific Literature</h4>
         <ul style={{ color: "#b5c5c8", lineHeight: 1.8, paddingLeft: "18px", margin: "8px 0 0" }}>
           <li><b>Savun-Hekimoğlu &amp; Gazioğlu (2021)</b>, <i>Mucilage Problem in the Semi-Enclosed Seas: Recent Outbreak in the Sea of Marmara</i>, Int. J. Environment and Geoinformatics, 8(4).</li>
           <li><b>Özalp (2021)</b>, <i>First massive mucilage event observed in deep waters of Çanakkale Strait (Dardanelles), Turkey</i>, Journal of the Black Sea/Mediterranean Environment, 27(2).</li>

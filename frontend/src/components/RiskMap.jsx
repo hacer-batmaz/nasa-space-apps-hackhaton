@@ -13,9 +13,9 @@ export const MARMARA_BOUNDS = [
 ];
 
 const BASIN_BOXES = {
-  marmara: { box: [26.9, 40.2, 30.0, 41.1], name: "Marmara veri kutusu" },
-  aegean: { box: [25.5, 36.8, 27.5, 39.8], name: "Ege veri kutusu" },
-  blacksea: { box: [28.0, 41.0, 41.8, 42.5], name: "Karadeniz veri kutusu" },
+  marmara: { box: [26.9, 40.2, 30.0, 41.1], name: "Marmara data bounds" },
+  aegean: { box: [25.5, 36.8, 27.5, 39.8], name: "Aegean data bounds" },
+  blacksea: { box: [28.0, 41.0, 41.8, 42.5], name: "Black Sea data bounds" },
 };
 
 // Box outline per base map: dark navy on the light map, white on satellite imagery.
@@ -46,7 +46,7 @@ export function riskColor(score) {
 }
 
 function fmt(v, digits = 1) {
-  return Number(v).toFixed(digits).replace(".", ",");
+  return Number(v).toFixed(digits);
 }
 
 export default function RiskMap({
@@ -170,8 +170,8 @@ export default function RiskMap({
           `<div class="rt-title">${p.name}</div>
            <div class="rt-row"><span>Risk</span><b style="color:${color}">${fmt(p.score, 0)}/100 · ${p.level}</b></div>
            <div class="rt-row"><span>SST</span><b>${fmt(p.sst)} °C</b></div>
-           <div class="rt-row"><span>Rüzgâr</span><b>${fmt(p.wind)} m/s</b></div>
-           <div class="rt-row"><span>Klorofil-a</span><b>${fmt(p.chl, 2)} mg/m³</b></div>
+           <div class="rt-row"><span>Wind</span><b>${fmt(p.wind)} m/s</b></div>
+           <div class="rt-row"><span>Chlorophyll-a</span><b>${fmt(p.chl, 2)} mg/m³</b></div>
            <div class="rt-note">${p.note}</div>`,
           { direction: "top", offset: [0, -radius], className: "risk-tooltip" }
         )

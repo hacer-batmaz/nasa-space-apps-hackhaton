@@ -3,24 +3,24 @@ import PlotChart from "../components/PlotChart";
 
 const API = "http://127.0.0.1:8000/api";
 
-const REGIONS = { marmara: "Marmara Denizi", aegean: "Ege Denizi", blacksea: "Karadeniz" };
+const REGIONS = { marmara: "Sea of Marmara", aegean: "Aegean Sea", blacksea: "Black Sea" };
 const MODELS = [
   { key: "rf", label: "Random Forest" },
   { key: "xgb", label: "XGBoost (Boosting)" },
-  { key: "svr", label: "SVR (Destek Vektör Regresyon)" },
+  { key: "svr", label: "SVR (Support Vector Regression)" },
 ];
 
 const FEATURE_LABELS = {
-  chl_log_lag1: "Önceki ayın klorofili",
-  month_sin: "Mevsim (yılın hangi ayı olduğu, sinüs)",
-  month_cos: "Mevsim (yılın hangi ayı olduğu, kosinüs)",
-  sst: "Aynı ayın deniz yüzeyi sıcaklığı",
-  sst_lag1: "Önceki ayın deniz yüzeyi sıcaklığı",
-  wind: "Aynı ayın rüzgâr hızı",
-  wind_lag1: "Önceki ayın rüzgâr hızı",
+  chl_log_lag1: "Previous month’s chlorophyll",
+  month_sin: "Season (month, sine)",
+  month_cos: "Season (month, cosine)",
+  sst: "Current month’s sea surface temperature",
+  sst_lag1: "Previous month’s sea surface temperature",
+  wind: "Current month’s wind speed",
+  wind_lag1: "Previous month’s wind speed",
 };
 
-const trNum = (v, d = 2) => (v === null || v === undefined ? "–" : v.toFixed(d).replace(".", ","));
+const trNum = (v, d = 2) => (v === null || v === undefined ? "–" : v.toFixed(d));
 
 export default function Model() {
   const [region, setRegion] = useState("marmara");
@@ -32,7 +32,7 @@ export default function Model() {
     setError(null);
     fetch(`${API}/ml-report?region=${region}&model_type=${modelType}`)
       .then((r) => {
-        if (!r.ok) throw new Error(`Sunucu hatası: ${r.status}`);
+        if (!r.ok) throw new Error(`Server error: ${r.status}`);
         return r.json();
       })
       .then(setMlReport)
@@ -43,7 +43,7 @@ export default function Model() {
     return (
       <div className="page-container" style={{ paddingTop: "40px" }}>
         <p className="mono" style={{ color: "#ff6b6b" }}>
-          HATA: {error} — Backend (uvicorn api:app --port 8000) çalışıyor mu kontrol edin.
+          ERROR: {error} — Backend (uvicorn api:app --port 8000) must be running; check the server.
         </p>
       </div>
     );
@@ -70,18 +70,21 @@ export default function Model() {
 
   return (
     <div className="page-container" style={{ paddingTop: "28px" }}>
-      <div className="eyebrow mono">MAKİNE ÖĞRENMESİ PREDİKTÖRÜ</div>
+      <div className="eyebrow mono">MACHINE LEARNING PREDICTOR</div>
       <h1 style={{ fontSize: "34px", fontWeight: 400, letterSpacing: "-1px", margin: "8px 0 4px" }}>
+<<<<<<< HEAD
         Model Karşılaştırma &amp; Kriz Testi
+=======
+        AI Model Comparison &amp; Crisis Test
+>>>>>>> 5216ad2 (sayfa ingilizceye cevrildi)
       </h1>
       <p style={{ color: "#a1b0b4", fontSize: "13px", maxWidth: "850px", margin: "6px 0 0" }}>
-        Modeller sıcaklık, rüzgâr, mevsim ve bir önceki ayın klorofil düzeyinden o ayın klorofil-a değerini tahmin
-        eder. Eğitimde hiç görmedikleri 2020–2024 dönemi (2021 müsilaj krizi dahil) üzerinde sınanırlar.
+        Models estimate monthly chlorophyll-a from temperature, wind, season and the previous month’s chlorophyll. They are evaluated on unseen data from 2020–2024, including the 2021 mucilage crisis.
       </p>
 
       <div className="control-bar">
         <div>
-          <label className="mono" style={{ color: "#9ca8aa" }}>BÖLGE</label>
+          <label className="mono" style={{ color: "#9ca8aa" }}>REGION</label>
           <select value={region} onChange={(e) => setRegion(e.target.value)}>
             {Object.entries(REGIONS).map(([k, v]) => (
               <option key={k} value={k}>{v}</option>
@@ -89,7 +92,7 @@ export default function Model() {
           </select>
         </div>
         <div style={{ gridColumn: "span 3" }}>
-          <label className="mono" style={{ color: "#9ca8aa" }}>ALGORİTMA</label>
+          <label className="mono" style={{ color: "#9ca8aa" }}>ALGORITHM</label>
           <div style={{ display: "flex", gap: "8px", marginTop: "6px", flexWrap: "wrap" }}>
             {MODELS.map((m) => (
               <button
@@ -110,35 +113,34 @@ export default function Model() {
         </div>
       </div>
 
-      {!mlReport && <p className="mono">YAPAY ZEKÂ MODELİ YÜKLENİYOR...</p>}
+      {!mlReport && <p className="mono">LOADING AI MODEL...</p>}
       {mlReport?.error && <div className="detail-banner">{mlReport.error}</div>}
 
       {ready && (
         <>
           <div className="detail-banner" style={{ marginTop: 0 }}>
-            Seçilen algoritma: <b style={{ color: "var(--acid)" }}>{mlReport.model_name}</b> · {REGIONS[mlReport.region]}.
-            Model <b>{mlReport.train_period}</b> ({mlReport.train_samples} ay) ile eğitildi,{" "}
-            <b>{mlReport.test_period}</b> ({mlReport.test_samples} ay) kör test setinde doğrulandı.
+            Selected algorithm: <b style={{ color: "var(--acid)" }}>{mlReport.model_name}</b> · {REGIONS[mlReport.region]}.
+            Trained on <b>{mlReport.train_period}</b> ({mlReport.train_samples} months), evaluated on the held-out <b>{mlReport.test_period}</b> test set ({mlReport.test_samples} months).
           </div>
 
           <div className="strip" style={{ marginTop: "10px" }}>
             <div>
               <div className="numeral" style={{ fontSize: "24px", color: "var(--acid)" }}>{mlReport.train_period}</div>
-              <p>Eğitim dönemi · {mlReport.train_samples} ay (%{100 - testPct})</p>
+              <p>Training period · {mlReport.train_samples} months ({100 - testPct}%)</p>
             </div>
             <div>
               <div className="numeral" style={{ fontSize: "24px", color: "#4fd1b5" }}>{mlReport.test_period}</div>
-              <p>Kör test dönemi · {mlReport.test_samples} ay (%{testPct})</p>
+              <p>Held-out test period · {mlReport.test_samples} months ({testPct}%)</p>
             </div>
             <div>
               <div className="numeral" style={{ fontSize: "24px", color: "var(--acid)" }}>{trNum(mlReport.r2_score)}</div>
-              <p>R² açıklayıcılık skoru (log klorofil)</p>
+              <p>R² score (log chlorophyll)</p>
             </div>
             <div>
               <div className="numeral" style={{ fontSize: "24px" }}>
                 ±{trNum(mlReport.mae)} <small>mg/m³</small>
               </div>
-              <p>Ortalama mutlak hata (MAE)</p>
+              <p>Mean absolute error (MAE)</p>
             </div>
           </div>
 
@@ -151,7 +153,7 @@ export default function Model() {
                   y: mlReport.actual_chl,
                   type: "scatter",
                   mode: "lines+markers",
-                  name: "Gerçek NASA uydusu (MODIS)",
+                  name: "NASA observations (MODIS)",
                   line: { color: "#4fd1b5", width: 2.2 },
                   marker: { size: 5 },
                 },
@@ -160,16 +162,16 @@ export default function Model() {
                   y: mlReport.predicted_chl,
                   type: "scatter",
                   mode: "lines+markers",
-                  name: `YZ tahmini (${modelType.toUpperCase()})`,
+                  name: `AI prediction (${modelType.toUpperCase()})`,
                   line: { color: "#d8f77a", width: 2.6, dash: "dot" },
                   marker: { size: 5 },
                 },
               ]}
               layout={{
                 ...darkPlotLayout,
-                title: { text: `Kör Test Dönemi: Gerçek vs. YZ Klorofil-a (${modelType.toUpperCase()})`, font: { size: 15 } },
+                title: { text: `Held-out Test: Observed vs. Predicted Chlorophyll-a (${modelType.toUpperCase()})`, font: { size: 15 } },
                 xaxis: { ...darkPlotLayout.xaxis, tickformat: "%m.%Y", dtick: "M6" },
-                yaxis: { ...darkPlotLayout.yaxis, title: "Klorofil-a (mg/m³)", rangemode: "tozero" },
+                yaxis: { ...darkPlotLayout.yaxis, title: "Chlorophyll-a (mg/m³)", rangemode: "tozero" },
                 shapes: [
                   {
                     type: "rect",
@@ -189,7 +191,7 @@ export default function Model() {
                     y: 1,
                     yref: "paper",
                     yanchor: "bottom",
-                    text: "2021 Müsilaj Zirvesi",
+                    text: "2021 Mucilage Peak",
                     showarrow: false,
                     font: { color: "#d8f77a", size: 11 },
                   },
@@ -202,20 +204,18 @@ export default function Model() {
 
           <div className="grid-2" style={{ marginTop: "20px" }}>
             <div className="dark-card">
-              <h4>Model hangi değişkenlere dayanıyor?</h4>
+              <h4>Which features does the model use?</h4>
               {hasImportance ? (
                 <>
                   <p style={{ fontSize: "12px", color: "#9ca8aa", marginBottom: "14px" }}>
-                    Her değişkenin, modelin klorofil tahmininde ne kadar kullanıldığı (öznitelik önemi). Toplam %100.
-                    Bu bir neden-sonuç ölçüsü değildir; birbirine benzeyen değişkenler (ör. bu ay ve önceki ayın
-                    sıcaklığı) önemi aralarında paylaşabilir.
+                    Relative feature importance in chlorophyll prediction; values sum to 100%. This is not a measure of causality. Correlated features, such as current and previous month’s temperature, may share importance.
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {sortedImportances.map(([feat, pct]) => (
                       <div key={feat}>
                         <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
                           <span>{FEATURE_LABELS[feat] || feat}</span>
-                          <b style={{ color: "var(--acid)" }}>%{pct.toFixed(1).replace(".", ",")}</b>
+                          <b style={{ color: "var(--acid)" }}>{pct.toFixed(1)}%</b>
                         </div>
                         <div style={{ width: "100%", height: "7px", background: "#16272e", borderRadius: "4px", overflow: "hidden" }}>
                           <div
@@ -232,27 +232,21 @@ export default function Model() {
                 </>
               ) : (
                 <p>
-                  SVR, ağaç tabanlı modeller gibi yerleşik bir öznitelik önemi üretmez. Bu yüzden bu model için önem
-                  dereceleri gösterilmiyor; karşılaştırma için Random Forest veya XGBoost seçin.
+                  Unlike tree-based models, SVR does not provide built-in feature importance. Select Random Forest or XGBoost to view importance values.
                 </p>
               )}
             </div>
 
             <div className="dark-card">
-              <h4>Sonuçlar nasıl okunur?</h4>
+              <h4>How to read the results</h4>
               <p style={{ marginBottom: "10px" }}>
-                <b>R²:</b> Modelin, klorofilin aydan aya değişiminin ne kadarını açıkladığını gösterir (logaritmik
-                ölçekte). 1&apos;e yaklaştıkça tahmin gerçeğe yaklaşır; 0 civarı, modelin ortalamadan daha iyi
-                olmadığını gösterir.
+                <b>R²:</b> Measures how much monthly chlorophyll variation is explained on a logarithmic scale. Values closer to 1 indicate better agreement; around 0 means performance is comparable to predicting the mean.
               </p>
               <p style={{ marginBottom: "10px" }}>
-                <b>MAE:</b> Tahminin gerçek değerden ortalama kaç mg/m³ saptığıdır.
+                <b>MAE:</b> The average absolute difference between predictions and observations, in mg/m³.
               </p>
               <p>
-                <b>Kör test:</b> Veri tarihe göre bölünür: model 2003–2019 ile eğitilir, 2020–2024&apos;ü hiç görmez.
-                Bütün algoritmalar aynı dönemle sınandığı için oran (%23) hepsinde aynıdır; bu, karşılaştırmanın adil
-                olmasını sağlar. 2021 zirvesini yakalayıp
-                yakalayamadığı, aşırı olayları tahmin etme gücünü gösterir.
+                <b>Held-out test:</b> Data are split chronologically: models train on 2003–2019 and are tested on unseen 2020–2024 data. The same test period (23%) is used for every algorithm for a fair comparison. Performance around the 2021 peak shows how well they estimate extreme chlorophyll values.
               </p>
             </div>
           </div>

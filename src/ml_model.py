@@ -38,7 +38,7 @@ def train_and_evaluate(df: pd.DataFrame, region: str = "marmara", model_type: st
     data = prepare_features(sub)
 
     if len(data) < 48:
-        return {"error": "Eğitim için yeterli veri yok."}
+        return {"error": "Insufficient data for training."}
 
     train_df = data[data["date"].dt.year < 2020]
     test_df = data[data["date"].dt.year >= 2020]
@@ -54,7 +54,7 @@ def train_and_evaluate(df: pd.DataFrame, region: str = "marmara", model_type: st
             model_name = "XGBoost (Gradient Boosting)"
         except ImportError:
             model = RandomForestRegressor(n_estimators=200, max_depth=6, min_samples_leaf=3, random_state=42)
-            model_name = "Random Forest (XGBoost bulunamadı)"
+            model_name = "Random Forest (XGBoost unavailable)"
     elif model_type == "svr":
         model = make_pipeline(StandardScaler(), SVR(kernel='rbf', C=1.0, epsilon=0.1))
         model_name = "Support Vector Regression (SVR)"
