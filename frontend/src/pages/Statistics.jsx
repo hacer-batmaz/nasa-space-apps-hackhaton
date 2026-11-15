@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import PlotChart from "../components/PlotChart";
 
-const API = "http://127.0.0.1:8000/api";
+const API = "/api";
 
 const REGIONS = { marmara: "Sea of Marmara", aegean: "Aegean Sea", blacksea: "Black Sea" };
 const VARS = {

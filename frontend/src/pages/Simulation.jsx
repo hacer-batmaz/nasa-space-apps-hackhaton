@@ -5,7 +5,7 @@ import PlotChart from "../components/PlotChart";
 import "./Simulation.css";
 
 // same base address as the other pages (Home, Statistics, Sources)
-const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
+const API = import.meta.env.VITE_API_URL || "/api";
 
 const MONTHS_TR = ["January", "February", "March", "April", "May", "June", "July", "August", "September",
   "October", "November", "December"];

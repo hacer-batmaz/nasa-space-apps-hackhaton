@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import PlotChart from "../components/PlotChart";
 
-const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
+const API = import.meta.env.VITE_API_URL || "/api";
 
 const REGIONS = { marmara: "Sea of Marmara", aegean: "Aegean Sea", blacksea: "Black Sea" };
 const MODELS = [

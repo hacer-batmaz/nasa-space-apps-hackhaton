@@ -22,7 +22,7 @@ function Src({ refs }) {
   );
 }
 
-const API = "http://127.0.0.1:8000/api";
+const API = "/api";
 
 const SEA_DETAILS = {
   marmara: {
