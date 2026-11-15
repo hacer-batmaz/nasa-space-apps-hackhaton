@@ -7,6 +7,13 @@ export const REFERENCES = {
     journal: "Turkish Journal of Biology, 34(2): 199–210",
     url: "https://doi.org/10.3906/biy-0812-1",
   },
+  koncagul2022: {
+    short: "Koncagül et al. (2022)",
+    authors: "Koncagül, Erdem Dülger & Yinanç (2022)",
+    title: "Formation and the effect of mucilage in the Sea of Marmara and in the world",
+    journal: "European Journal of Engineering and Applied Sciences, 5(2): 73–79",
+    url: "https://doi.org/10.55581/ejeas.1217901",
+  },
   ozalp2021a: {
     short: "Özalp (2021a)",
     authors: "Özalp (2021a)",
@@ -64,13 +71,5 @@ export const REFERENCES = {
     title: "Estimates of the regression coefficient based on Kendall's tau",
     journal: "Journal of the American Statistical Association, 63(324): 1379–1389",
     url: "https://doi.org/10.1080/01621459.1968.10480934",
-  },
-};
-
-// Secondary source (not a research article): only used for the 1992 Erdek record
-export const SECONDARY = {
-  erdek1992: {
-    short: "Üsküdar University news",
-    url: "https://uskudar.edu.tr/en/icerik/44599/safari-pinned-tab.svg",
   },
 };

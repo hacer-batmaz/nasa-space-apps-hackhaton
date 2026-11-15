@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import Globe3D from "../components/Globe3D";
 import MucilageProcess from "../components/MucilageProcess";
-import { REFERENCES, SECONDARY } from "../data/references";
+import { REFERENCES } from "../data/references";
 
 // small "Source" link shown after a sentence
 function Src({ refs }) {
@@ -207,8 +207,8 @@ export default function Home({ onNavigate }) {
             </h3>
             <div className="timeline-dark">
               <p>
-                <b>1992</b> — The earliest reported mucilage observations in Türkiye were in Erdek Bay.
-                <Src refs={[SECONDARY.erdek1992]} />
+                <b>1992</b> — The first mucilage in Türkiye was observed in Erdek Bay by sport divers.
+                <Src refs={[REFERENCES.koncagul2022, REFERENCES.tufekci2010]} />
               </p>
               <p>
                 <b>October 2007 – February 2008</b> — Widespread mucilage in Marmara, especially in İzmit Bay. One of the dominant species was <i>Gonyaulax fragilis</i>.
