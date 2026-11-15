@@ -127,11 +127,11 @@ export default function Statistics() {
         </div>
         <div>
           <label className="mono" style={{ color: "#9ca8aa" }}>START YEAR: {startYear}</label>
-          <input type="range" min="2003" max="2020" value={startYear} onChange={(e) => setStartYear(Number(e.target.value))} style={{ width: "100%", accentColor: "var(--acid)", marginTop: "12px" }} />
+          <input type="range" min="2003" max="2020" value={startYear} onChange={(e) => setStartYear(Math.min(Number(e.target.value), endYear - 5))} style={{ width: "100%", accentColor: "var(--acid)", marginTop: "12px" }} />
         </div>
         <div>
           <label className="mono" style={{ color: "#9ca8aa" }}>END YEAR: {endYear}</label>
-          <input type="range" min="2008" max="2024" value={endYear} onChange={(e) => setEndYear(Number(e.target.value))} style={{ width: "100%", accentColor: "var(--acid)", marginTop: "12px" }} />
+          <input type="range" min="2008" max="2024" value={endYear} onChange={(e) => setEndYear(Math.max(Number(e.target.value), startYear + 5))} style={{ width: "100%", accentColor: "var(--acid)", marginTop: "12px" }} />
         </div>
       </div>
 
