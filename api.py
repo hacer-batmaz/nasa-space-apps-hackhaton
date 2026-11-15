@@ -62,19 +62,22 @@ MAP_POINTS = [
     {"name": "Off Samsun", "region": "blacksea", "lat": 41.45, "lon": 36.40, "susceptibility": 0.72, "note": "Nutrient inputs from the Kızılırmak and Yeşilırmak rivers"},
 ]
 
-# Tüm modelleri (RF, XGB, SVR) sunucu açılışında 3 havza için önbelleğe alıyoruz
-ML_MODELS = {}
-for reg in ("marmara", "aegean", "blacksea"):
-    for m_type in ("rf", "xgb", "svr"):
-        ML_MODELS[(reg, m_type)] = train_and_evaluate(DF, reg, m_type)
+ML_MODELS: dict = {}
+
+
+def get_model(region: str, model_type: str):
+    key = (region, model_type)
+    if key not in ML_MODELS:
+        ML_MODELS[key] = train_and_evaluate(DF, region, model_type)
+    return ML_MODELS[key]
 
 
 @app.get("/api/ml-report")
 def get_ml_report(region: str = Query("marmara"), model_type: str = Query("rf")) -> dict:
-    key = (region, model_type)
-    bundle = ML_MODELS.get(key, ML_MODELS[("marmara", "rf")])
+    if region not in ("marmara", "aegean", "blacksea") or model_type not in ("rf", "xgb", "svr"):
+        region, model_type = "marmara", "rf"
+    bundle = get_model(region, model_type)
     return {k: v for k, v in bundle.items() if k != "_model"}
-
 
 def clean_num(val: Any) -> float | None:
     if val is None or (isinstance(val, float) and np.isnan(val)):
@@ -175,7 +178,7 @@ def get_simulation(
         sst = b["sst"] + d_sst
         wind = max(b["wind"] * (1 + d_wind / 100), 0.1)
         chl = max(b["chl"] * (1 + d_chl / 100), 1e-3)
-        ai_chl = predict_scenario_chl(ML_MODELS[(p["region"], "rf")], sst, wind, b["chl"], month)
+        ai_chl = predict_scenario_chl(get_model(p["region"], "rf"), sst, wind, b["chl"], month)
         score, comps = risk_score(sst, wind, chl, p["susceptibility"])
         base_score, _ = risk_score(b["sst"], b["wind"], b["chl"], p["susceptibility"])
         points_out.append({
